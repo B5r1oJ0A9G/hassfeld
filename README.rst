@@ -22,7 +22,7 @@ Features
 
 Install hassfeld by running::
 
-    python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps hassfeld
+    python3 -m pip install hassfeld
 
 Contribute
 ----------
