@@ -33,3 +33,4 @@ TRIGGER_UPDATE_ZONE_CONFIG = 'zone_config'
 TYPE_MEDIA_SERVER = 'urn:schemas-upnp-org:device:MediaServer:1'
 TYPE_RAUMFELD_DEVICE = 'urn:schemas-raumfeld-com:device:RaumfeldDevice:1'
 CONTENT_DIRECTORY = 'urn:schemas-upnp-org:service:ContentDirectory:1'
+SERVICE_ID_SETUP_SERVICE = "urn:schemas-raumfeld-com:service:SetupService:1"

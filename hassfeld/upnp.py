@@ -248,3 +248,42 @@ def previous(location, instance_id=0):
     device = upnpclient.Device(location)
     device.AVTransport.Previous(InstanceID=instance_id)
 
+def get_device(location, service):
+    device = upnpclient.Device(location)
+    response = device.SetupService.GetDevice(Service=service)
+    return response["UniqueDeviceName"]
+
+def get_info(location):
+    device = upnpclient.Device(location)
+    response = device.SetupService.GetInfo()
+    return response["SoftwareVersion"]
+
+def get_update_info(location):
+    device = upnpclient.Device(location)
+    response = device.SetupService.GetUpdateInfo()
+    return response
+
+def get_manufacturer(location):
+    device = upnpclient.Device(location)
+    response = device.manufacturer
+    return response
+
+def get_manufacturer_url(location):
+    device = upnpclient.Device(location)
+    response = device.manufacturer_url
+    return response
+
+def get_model_name(location):
+    device = upnpclient.Device(location)
+    response = device.model_name
+    return response
+
+def get_model_number(location):
+    device = upnpclient.Device(location)
+    response = device.model_number
+    return response
+
+def get_serial_number(location):
+    device = upnpclient.Device(location)
+    response = device.serial_number
+    return response

@@ -52,6 +52,7 @@ class RaumfeldHost:
 
         # up-to-date data derived from "self.wsd".
         self.resolve = {
+            'devudn_to_name': {},
             'room_to_udn': {},
             'udn_to_devloc': {},
             'udn_to_room': {},
@@ -61,8 +62,16 @@ class RaumfeldHost:
         }
 
         self.lists = {
+            'raumfeld_device_udns': [],
             'rooms': [],
             'zones': [],
+        }
+
+        self.init_done = {
+            'devices': False,
+            'host_info': False,
+            'system_state': False,
+            'zone_config': False,
         }
 
         # up-to-date data derived from "self.wsd".
@@ -101,10 +110,7 @@ class RaumfeldHost:
         asyncio.run_coroutine_threadsafe(self.__async_update(), self._loop)
 
         # Wait for first data as background updates are asynchronous.
-        while {} in (self.wsd['devices'],
-                     self.wsd['host_info'],
-                     self.wsd['system_state'],
-                     self.wsd['zone_config']):
+        while False in self.init_done.values():
             sleep(DELAY_FAST_UPDATE_CHECKS)
 
     async def __async_update(self):
@@ -163,6 +169,9 @@ class RaumfeldHost:
     def __update_host_info(self, content_xml):
         gethostinfo = xmltodict.parse(content_xml)
         self.wsd['host_info'] = gethostinfo['hostInfo']
+
+        self.init_done['host_info'] = True
+
         if self.callback is not None:
             self.callback(TRIGGER_UPDATE_HOST_INFO)
 
@@ -204,10 +213,14 @@ class RaumfeldHost:
                 self.resolve['udn_to_room'][room_udn] = room_name
                 self.lists['rooms'].append(room_name)
 
+        self.init_done['zone_config'] = True
+
         if self.callback is not None:
             self.callback(TRIGGER_UPDATE_ZONE_CONFIG)
 
     def __update_devices(self, content_xml):
+        self.lists['raumfeld_device_udns'] = []
+        self.resolve['devudn_to_name'] = {}
         self.resolve['udn_to_devloc'] = {}
 
         listdevices = xmltodict.parse(content_xml, force_list=('device'))
@@ -217,10 +230,17 @@ class RaumfeldHost:
             device_loc = device_itm['@location']
             device_type = device_itm['@type']
             device_udn = device_itm['@udn']
+            device_name = device_itm['#text']
+            self.resolve['devudn_to_name'][device_udn] = device_name
             self.resolve['udn_to_devloc'][device_udn] = device_loc
 
             if device_type == TYPE_MEDIA_SERVER:
                 self.media_server_udn = device_udn
+
+            if device_type == TYPE_RAUMFELD_DEVICE:
+                self.lists['raumfeld_device_udns'].append(device_udn)
+
+        self.init_done['devices'] = True
 
         if self.callback is not None:
             self.callback(TRIGGER_UPDATE_DEVICES)
@@ -234,6 +254,9 @@ class RaumfeldHost:
         )
 
         self.update_available = aux.str_to_bool(update_available)
+
+        self.init_done['system_state'] = True
+
         if self.callback is not None:
             self.callback(TRIGGER_UPDATE_SYSTEM_STATE)
 
@@ -257,6 +280,18 @@ class RaumfeldHost:
     def get_rooms(self):
         room_lst = self.lists['rooms']
         return room_lst
+
+    def get_raumfeld_device_udns(self):
+        devudn_lst = self.lists['raumfeld_device_udns']
+        return devudn_lst
+
+    def device_udn_to_name(self, device_udn):
+        device_name = self.resolve['devudn_to_name'][device_udn]
+        return device_name
+
+    def device_udn_to_location(self, device_udn):
+        device_location= self.resolve['udn_to_devloc'][device_udn]
+        return device_location
 
     def get_host_room(self):
         return self.wsd['host_info']['roomName']
