@@ -152,14 +152,17 @@ class RaumfeldHost:
         while True:
             if update_id:
                 headers['updateID'] = update_id
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=headers) as response:
-                    if response.status == 200:
-                        update_id = response.headers['updateID']
-                        _callback(await response.read())
-                    elif response.status != 304:
-                        await asyncio.sleep(DELAY_REQUEST_FAILURE_LONG_POLLING)
-                        continue
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url, headers=headers) as response:
+                        if response.status == 200:
+                            update_id = response.headers['updateID']
+                            _callback(await response.read())
+                        elif response.status != 304:
+                            await asyncio.sleep(DELAY_REQUEST_FAILURE_LONG_POLLING)
+                            continue
+            except:
+                pass
         await asyncio.sleep(DELAY_FAST_UPDATE_CHECKS)
 
     #
