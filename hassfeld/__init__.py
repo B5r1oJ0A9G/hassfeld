@@ -12,9 +12,11 @@ from .constants import (
     DEFAULT_PORT_WEBSERVICE,
     DELAY_FAST_UPDATE_CHECKS,
     DELAY_REQUEST_FAILURE_LONG_POLLING,
+    MAX_RETRIES,
     PREFERRED_TIMEOUT_LONG_POLLING,
     REQUIRED_METADATA,
     TIMEOUT_WEBSERVICE_ACTION,
+    TRANSPORT_STATE_TRANSITIONING,
     TRIGGER_UPDATE_DEVICES,
     TRIGGER_UPDATE_HOST_INFO,
     TRIGGER_UPDATE_SYSTEM_STATE,
@@ -564,13 +566,20 @@ class RaumfeldHost:
 
     def restore_zone(self, zone_room_lst, del_snap=True):
         key = repr(zone_room_lst)
+        retries = 0
         if key in self.snap:
-            self.create_zone(zone_room_lst)
             self.set_av_transport_uri(
                 zone_room_lst,
                 self.snap[key]['uri'],
                 self.snap[key]['metadata']
             )
+            while retries < MAX_RETRIES:
+                transport_info = self.get_transport_info(zone_room_lst)
+                transport_state = transport_info["CurrentTransportState"]
+                if transport_state != TRANSPORT_STATE_TRANSITIONING:
+                    break
+                sleep(DELAY_FAST_UPDATE_CHECKS)
+                retries += 1
             self.zone_seek(zone_room_lst, self.snap[key]['abs_time'])
             if del_snap:
               self.snap.pop(key, None)
