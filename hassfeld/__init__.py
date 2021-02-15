@@ -557,21 +557,28 @@ class RaumfeldHost:
     def save_zone(self, zone_room_lst, repl_snap=False):
         media_info = self.get_media_info(zone_room_lst)
         position_info = self.get_position_info(zone_room_lst)
+        volume = self.get_zone_volume(zone_room_lst)
         key = repr(zone_room_lst)
         if key not in self.snap or repl_snap:
             self.snap[key] = {}
             self.snap[key]['uri'] = media_info['CurrentURI']
             self.snap[key]['metadata'] = media_info['CurrentURIMetaData']
             self.snap[key]['abs_time'] = position_info['AbsTime']
+            self.snap[key]['volume'] = volume
 
     def restore_zone(self, zone_room_lst, del_snap=True):
         key = repr(zone_room_lst)
         retries = 0
         if key in self.snap:
+            uri = self.snap[key]['uri']
+            metadata = self.snap[key]['metadata']
+            abs_time = self.snap[key]['abs_time']
+            volume = self.snap[key]['volume']
+            self.set_zone_volume(zone_room_lst, 0)
             self.set_av_transport_uri(
                 zone_room_lst,
-                self.snap[key]['uri'],
-                self.snap[key]['metadata']
+                uri,
+                metadata
             )
             while retries < MAX_RETRIES:
                 transport_info = self.get_transport_info(zone_room_lst)
@@ -580,7 +587,8 @@ class RaumfeldHost:
                     break
                 sleep(DELAY_FAST_UPDATE_CHECKS)
                 retries += 1
-            self.zone_seek(zone_room_lst, self.snap[key]['abs_time'])
+            self.zone_seek(zone_room_lst, abs_time)
+            self.set_zone_volume(zone_room_lst, volume)
             if del_snap:
               self.snap.pop(key, None)
     #
