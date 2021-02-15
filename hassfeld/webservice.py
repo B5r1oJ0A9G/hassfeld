@@ -2,6 +2,7 @@
 import requests
 import xmltodict
 
+
 def connect_room_to_zone(location, zone_udn=None, room_udn=None):
     """Puts the room with the given room_udn in the zone with the zone_udn.
 
@@ -16,15 +17,15 @@ def connect_room_to_zone(location, zone_udn=None, room_udn=None):
     params = {}
 
     if zone_udn:
-        params['zoneUDN'] = zone_udn
+        params["zoneUDN"] = zone_udn
 
     if room_udn:
-        params['roomUDN'] = room_udn
+        params["roomUDN"] = room_udn
 
-    url = (location
-           + "/connectRoomToZone")
+    url = location + "/connectRoomToZone"
 
     requests.get(url, params=params)
+
 
 def connect_rooms_to_zone(location, zone_udn=None, room_udns=None):
     """Puts the rooms with the given roomUDNs in the zone with the zoneUDN.
@@ -40,15 +41,15 @@ def connect_rooms_to_zone(location, zone_udn=None, room_udns=None):
     params = {}
 
     if zone_udn:
-        params['zoneUDN'] = zone_udn
+        params["zoneUDN"] = zone_udn
 
     if room_udns:
-        params['roomUDNs'] = ','.join(room_udns)
+        params["roomUDNs"] = ",".join(room_udns)
 
-    url = (location
-           + "/connectRoomsToZone")
+    url = location + "/connectRoomsToZone"
 
     requests.get(url, params=params)
+
 
 def drop_room_job(location, room_udn):
     """Drops the room with the given roomUDN from the zone it is in.
@@ -56,12 +57,12 @@ def drop_room_job(location, room_udn):
     Parameter:
     room_udn -- The udn of the room that has to be dropped.
     """
-    params = {'roomUDN': room_udn}
+    params = {"roomUDN": room_udn}
 
-    url = (location
-           + "/dropRoomJob")
+    url = location + "/dropRoomJob"
 
     requests.get(url, params=params)
+
 
 def enter_automatic_standby(location, room_udn):
     """Calls RPC to put a room into automatic standby.
@@ -69,12 +70,12 @@ def enter_automatic_standby(location, room_udn):
     Parameter:
     room_udn -- udn of the desired room.
     """
-    params = {'roomUDN': room_udn}
+    params = {"roomUDN": room_udn}
 
-    url = (location
-           + "/enterAutomaticStandby")
+    url = location + "/enterAutomaticStandby"
 
     requests.get(url, params=params)
+
 
 def enter_manual_standby(location, room_udn):
     """Calls RPC to put a room into manual standby.
@@ -82,12 +83,12 @@ def enter_manual_standby(location, room_udn):
     Parameter:
     room_udn -- udn of the desired room.
     """
-    params = {'roomUDN': room_udn}
+    params = {"roomUDN": room_udn}
 
-    url = (location
-           + "/enterManualStandby")
+    url = location + "/enterManualStandby"
 
     requests.get(url, params=params)
+
 
 def leave_standby(location, room_udn):
     """Calls RPC to let a room leave manual or automatic standby.
@@ -95,21 +96,20 @@ def leave_standby(location, room_udn):
     Parameter:
     room_udn -- udn of the desired room.
     """
-    params = {'roomUDN': room_udn}
+    params = {"roomUDN": room_udn}
 
-    url = (location
-           + "/leaveStandby")
+    url = location + "/leaveStandby"
 
     requests.get(url, params=params)
+
 
 def ping(location):
     """Just a heart beat tester
 
     Returns a dictionary containing hardware model and number.
     """
-    url = (location
-           + "/Ping")
+    url = location + "/Ping"
 
     response = requests.get(url)
     ping = xmltodict.parse(response.content)
-    return ping['response']
+    return ping["response"]
