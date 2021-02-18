@@ -327,10 +327,9 @@ class RaumfeldHost:
         else:
             return False
 
-    def get_zone_power_state(self, room_lst):
-        udn_lst = self.roomlst_to_udnlst(room_lst)
-        zone_udn = self.roomudnlst_to_zoneudn(udn_lst)
-        # power_state = self.resolve['roomudn_to_powerstate'][room_udn]
+    def get_room_power_state(self, room):
+        room_udn = self.resolve['room_to_udn'][room]
+        power_state = self.resolve['roomudn_to_powerstate'][room_udn]
         return power_state
 
     #
