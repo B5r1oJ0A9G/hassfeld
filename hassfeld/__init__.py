@@ -328,8 +328,8 @@ class RaumfeldHost:
             return False
 
     def get_room_power_state(self, room):
-        room_udn = self.resolve['room_to_udn'][room]
-        power_state = self.resolve['roomudn_to_powerstate'][room_udn]
+        room_udn = self.resolve["room_to_udn"][room]
+        power_state = self.resolve["roomudn_to_powerstate"][room_udn]
         return power_state
 
     #
@@ -568,6 +568,18 @@ class RaumfeldHost:
             self.set_zone_volume(zone_room_lst, volume)
             if del_snap:
                 self.snap.pop(key, None)
+
+    def enter_automatic_standby(self, room):
+        room_udn = self.resolve["room_to_udn"][room]
+        ws.enter_automatic_standby(self.location, room_udn)
+
+    def enter_manual_standby(self, room):
+        room_udn = self.resolve["room_to_udn"][room]
+        ws.enter_manual_standby(self.location, room_udn)
+
+    def leave_standby(self, room):
+        room_udn = self.resolve["room_to_udn"][room]
+        ws.leave_standby(self.location, room_udn)
 
     #
     # Home Assistent specific
