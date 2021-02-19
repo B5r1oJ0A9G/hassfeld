@@ -197,6 +197,7 @@ class RaumfeldHost:
             for room in self.wsd["zone_config"]["unassignedRooms"]["room"]:
                 room_name = room["@name"]
                 room_udn = room["@udn"]
+                self.resolve["roomudn_to_powerstate"][room_udn] = room["@powerState"]
                 self.resolve["room_to_udn"][room_name] = room_udn
                 self.resolve["udn_to_room"][room_udn] = room_name
                 self.lists["rooms"].append(room_name)
