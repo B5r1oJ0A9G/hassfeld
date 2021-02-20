@@ -1,7 +1,7 @@
 """Methods implementing UPnP requests."""
 import upnpclient
 
-from .constants import BROWSE_CHILDREN
+from .constants import BROWSE_CHILDREN, USER_AGENT_RAUMFELD
 
 
 def get_mute(location, channel="Master", instance_id=0):
@@ -256,7 +256,8 @@ def browse(
     requested_count=0,
     sort_criteria="",
 ):
-    device = upnpclient.Device(location)
+    http_headers = {"User-Agent": USER_AGENT_RAUMFELD}
+    device = upnpclient.Device(location, http_headers=http_headers)
     response = device.ContentDirectory.Browse(
         ObjectID=object_id,
         BrowseFlag=browse_flag,
