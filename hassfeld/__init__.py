@@ -11,7 +11,7 @@ import xmltodict
 from . import auxilliary as aux
 from . import upnp
 from . import webservice as ws
-from .constants import (BROWSE_METADATA, CID_SEARCH_ALLTRACKS,
+from .constants import (BROWSE_CHILDREN, CID_SEARCH_ALLTRACKS,
                         DEFAULT_PORT_WEBSERVICE, DELAY_FAST_UPDATE_CHECKS,
                         DELAY_REQUEST_FAILURE_LONG_POLLING, MAX_RETRIES,
                         PREFERRED_TIMEOUT_LONG_POLLING, REQUIRED_METADATA,
@@ -19,7 +19,8 @@ from .constants import (BROWSE_METADATA, CID_SEARCH_ALLTRACKS,
                         TRANSPORT_STATE_TRANSITIONING, TRIGGER_UPDATE_DEVICES,
                         TRIGGER_UPDATE_HOST_INFO, TRIGGER_UPDATE_SYSTEM_STATE,
                         TRIGGER_UPDATE_ZONE_CONFIG, TYPE_MEDIA_SERVER,
-                        TYPE_RAUMFELD_DEVICE)
+                        TYPE_RAUMFELD_DEVICE, USER_AGENT_RAUMFELD,
+                        USER_AGENT_RAUMFELD_OIDS)
 
 
 class RaumfeldHost:
@@ -424,8 +425,16 @@ class RaumfeldHost:
         upnp.previous(zone_loc)
 
     def browse_media_server(self, object_id, browse_flag):
+        http_headers = None
+
+        if browse_flag == BROWSE_CHILDREN:
+            if object_id in USER_AGENT_RAUMFELD_OIDS:
+                http_headers = {"User-Agent": USER_AGENT_RAUMFELD}
+
         media_server_loc = self.resolve["udn_to_devloc"][self.media_server_udn]
-        return upnp.browse(media_server_loc, object_id, browse_flag)
+        return upnp.browse(
+            media_server_loc, object_id, browse_flag, http_headers=http_headers
+        )
 
     def search_media_server(
         self,
