@@ -147,6 +147,10 @@ class RaumfeldHost:
                         elif response.status != 304:
                             await asyncio.sleep(DELAY_REQUEST_FAILURE_LONG_POLLING)
                             continue
+            except aiohttp.client_exceptions.ClientConnectorError as err:
+                # TODO handle connection error
+                print("Could not connect:", err)
+                pass
             except:
                 pass
         await asyncio.sleep(DELAY_FAST_UPDATE_CHECKS)
