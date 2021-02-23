@@ -175,24 +175,25 @@ class RaumfeldHost:
         getzones = xmltodict.parse(content_xml, force_list=("zone", "room"))
         self.wsd["zone_config"] = getzones["zoneConfig"]
 
-        for zone_itm in self.wsd["zone_config"]["zones"]["zone"]:
-            zone_rooms = []
-            zone_udn = zone_itm["@udn"]
-            self.resolve["zoneudn_to_roomudnlst"][zone_udn] = []
+        if "zones" in self.wsd["zone_config"]:
+            for zone_itm in self.wsd["zone_config"]["zones"]["zone"]:
+                zone_rooms = []
+                zone_udn = zone_itm["@udn"]
+                self.resolve["zoneudn_to_roomudnlst"][zone_udn] = []
 
-            for room_itm in zone_itm["room"]:
-                room_name = room_itm["@name"]
-                room_udn = room_itm["@udn"]
-                zone_rooms.append(room_name)
-                self.lists["rooms"].append(room_name)
-                self.resolve["roomudn_to_powerstate"][room_udn] = room_itm[
-                    "@powerState"
-                ]
-                self.resolve["room_to_udn"][room_name] = room_udn
-                self.resolve["udn_to_room"][room_udn] = room_name
-                self.resolve["zoneudn_to_roomudnlst"][zone_udn].append(room_udn)
+                for room_itm in zone_itm["room"]:
+                    room_name = room_itm["@name"]
+                    room_udn = room_itm["@udn"]
+                    zone_rooms.append(room_name)
+                    self.lists["rooms"].append(room_name)
+                    self.resolve["roomudn_to_powerstate"][room_udn] = room_itm[
+                        "@powerState"
+                    ]
+                    self.resolve["room_to_udn"][room_name] = room_udn
+                    self.resolve["udn_to_room"][room_udn] = room_name
+                    self.resolve["zoneudn_to_roomudnlst"][zone_udn].append(room_udn)
 
-            self.lists["zones"].append(sorted(zone_rooms))
+                self.lists["zones"].append(sorted(zone_rooms))
 
         if "unassignedRooms" in self.wsd["zone_config"]:
             for room in self.wsd["zone_config"]["unassignedRooms"]["room"]:
