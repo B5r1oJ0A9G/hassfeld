@@ -149,7 +149,7 @@ class RaumfeldHost:
                             continue
             except:
                 pass
-        await asyncio.sleep(DELAY_FAST_UPDATE_CHECKS)
+            await asyncio.sleep(DELAY_FAST_UPDATE_CHECKS)
 
     #
     # Callback functions for long polling.
