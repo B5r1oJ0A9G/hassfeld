@@ -1,6 +1,10 @@
 """Module to interface with Raumfeld smart speakers"""
 import asyncio
+import inspect
 import json
+import logging
+import os
+import sys
 import threading
 from time import sleep
 
@@ -21,6 +25,26 @@ from .constants import (BROWSE_CHILDREN, CID_SEARCH_ALLTRACKS,
                         TRIGGER_UPDATE_ZONE_CONFIG, TYPE_MEDIA_SERVER,
                         TYPE_RAUMFELD_DEVICE, USER_AGENT_RAUMFELD,
                         USER_AGENT_RAUMFELD_OIDS)
+
+logger = logging.getLogger(__name__)
+
+
+def log_debug(message):
+    """Logging of debug information."""
+    name = inspect.currentframe().f_back.f_code.co_name
+    filename = inspect.currentframe().f_back.f_code.co_filename
+    basename = os.path.basename(filename)
+    logger.debug("%s->%s: %s", basename, name, message)
+
+
+def log_info(message):
+    """Logging of information."""
+    logger.info(message)
+
+
+def log_critical(message):
+    """Logging of information."""
+    logger.critical(message)
 
 
 class RaumfeldHost:
@@ -68,6 +92,9 @@ class RaumfeldHost:
         # up-to-date data derived from "self.wsd".
         media_server_udn = ""
         self.update_available = False
+
+    def set_logging_level(self, level):
+        logger.setLevel(level)
 
     async def async_host_is_valid(self):
         url = self.location + "/getHostInfo"
@@ -148,7 +175,8 @@ class RaumfeldHost:
                             await asyncio.sleep(DELAY_REQUEST_FAILURE_LONG_POLLING)
                             continue
             except:
-                pass
+                exc_info = f"%s%s" % (sys.exc_info()[0], sys.exc_info()[1])
+                log_critical("Long-polling failed with error: %s" % exc_info)
             await asyncio.sleep(DELAY_FAST_UPDATE_CHECKS)
 
     #
