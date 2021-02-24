@@ -57,6 +57,7 @@ class RaumfeldHost:
         }
 
         self.lists = {
+            "locations": [],
             "raumfeld_device_udns": [],
             "rooms": [],
             "zones": [],
@@ -233,6 +234,7 @@ class RaumfeldHost:
             self.callback(TRIGGER_UPDATE_ZONE_CONFIG)
 
     def __update_devices(self, content_xml):
+        self.lists["locations"] = []
         self.lists["raumfeld_device_udns"] = []
         self.resolve["devudn_to_name"] = {}
         self.resolve["udn_to_devloc"] = {}
@@ -245,6 +247,7 @@ class RaumfeldHost:
             device_type = device_itm["@type"]
             device_udn = device_itm["@udn"]
             device_name = device_itm["#text"]
+            self.lists["locations"].append(device_loc)
             self.resolve["devudn_to_name"][device_udn] = device_name
             self.resolve["udn_to_devloc"][device_udn] = device_loc
 
@@ -353,9 +356,24 @@ class RaumfeldHost:
         else:
             return False
 
+    def room_is_valid(self, room):
+        if room in self.lists["rooms"]:
+            return True
+        else:
+            return False
+
+    def location_is_valid(self, location):
+        if location in self.lists["locations"]:
+            return True
+        else:
+            return False
+
     def get_room_power_state(self, room):
-        room_udn = self.resolve["room_to_udn"][room]
-        power_state = self.resolve["roomudn_to_powerstate"][room_udn]
+        if self.room_is_valid(room):
+            room_udn = self.resolve["room_to_udn"][room]
+            power_state = self.resolve["roomudn_to_powerstate"][room_udn]
+        else:
+            power_state = None
         return power_state
 
     #
