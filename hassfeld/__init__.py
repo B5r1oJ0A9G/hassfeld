@@ -2,7 +2,6 @@
 import asyncio
 import inspect
 import json
-import logging
 import os
 import sys
 import threading
@@ -15,6 +14,7 @@ import xmltodict
 from . import auxilliary as aux
 from . import upnp
 from . import webservice as ws
+from .common import log_critical, log_warn, logger
 from .constants import (BROWSE_CHILDREN, CID_SEARCH_ALLTRACKS,
                         DEFAULT_PORT_WEBSERVICE, DELAY_FAST_UPDATE_CHECKS,
                         DELAY_REQUEST_FAILURE_LONG_POLLING, MAX_RETRIES,
@@ -25,31 +25,6 @@ from .constants import (BROWSE_CHILDREN, CID_SEARCH_ALLTRACKS,
                         TRIGGER_UPDATE_ZONE_CONFIG, TYPE_MEDIA_SERVER,
                         TYPE_RAUMFELD_DEVICE, USER_AGENT_RAUMFELD,
                         USER_AGENT_RAUMFELD_OIDS)
-
-logger = logging.getLogger(__name__)
-
-
-def log_debug(message):
-    """Logging of debug information."""
-    name = inspect.currentframe().f_back.f_code.co_name
-    filename = inspect.currentframe().f_back.f_code.co_filename
-    basename = os.path.basename(filename)
-    logger.debug("%s->%s: %s", basename, name, message)
-
-
-def log_info(message):
-    """Logging of information."""
-    logger.info(message)
-
-
-def log_warn(message):
-    """Logging of warnings."""
-    logger.warning(message)
-
-
-def log_critical(message):
-    """Logging of information."""
-    logger.critical(message)
 
 
 class RaumfeldHost:

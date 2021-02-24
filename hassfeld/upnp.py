@@ -1,9 +1,26 @@
 """Methods implementing UPnP requests."""
+import sys
+
 import upnpclient
 
+from .common import log_error
 from .constants import BROWSE_CHILDREN
 
 
+def exception_handler(function):
+    def new_function(*args, **kwargs):
+        try:
+            result = function(*args, **kwargs)
+            return result
+        except:
+            exc_info = f"%s%s" % (sys.exc_info()[0], sys.exc_info()[1])
+            name = function.__name__
+            log_error("Unexpected error with %s: %s" % (function.__name__, exc_info))
+
+    return new_function
+
+
+@exception_handler
 def get_mute(location, channel="Master", instance_id=0):
     """Returns a bolean of the mute status of a rendering service.
 
@@ -21,6 +38,7 @@ def get_mute(location, channel="Master", instance_id=0):
     return response["CurrentMute"]
 
 
+@exception_handler
 def set_mute(
     location,
     desired_mute=True,
@@ -51,6 +69,7 @@ def set_mute(
     )
 
 
+@exception_handler
 def get_room_volume(location, room, instance_id=0):
     """Returns the integer for the volume of a rendering service in a room.
 
@@ -68,6 +87,7 @@ def get_room_volume(location, room, instance_id=0):
     return response["CurrentVolume"]
 
 
+@exception_handler
 def set_room_volume(location, room, desired_volume, instance_id=0):
     """Sets the volume of a rendering service in a room.
 
@@ -87,6 +107,7 @@ def set_room_volume(location, room, desired_volume, instance_id=0):
     )
 
 
+@exception_handler
 def get_room_mute(location, room, instance_id=0):
     """Returns the mute status of a rendering service in a room.
 
@@ -104,6 +125,7 @@ def get_room_mute(location, room, instance_id=0):
     return response["CurrentMute"]
 
 
+@exception_handler
 def set_room_mute(location, room, desired_mute=True, instance_id=0):
     """Sets the mute status of a rendering service in a room.
 
@@ -128,6 +150,7 @@ def set_room_mute(location, room, desired_mute=True, instance_id=0):
     )
 
 
+@exception_handler
 def change_volume(location, amount, instance_id=0):
     """Changes the volume of all rooms in a zone up or down.
 
@@ -144,6 +167,7 @@ def change_volume(location, amount, instance_id=0):
     device.RenderingControl.ChangeVolume(InstanceID=instance_id, Amount=amount)
 
 
+@exception_handler
 def get_volume(location, channel="Master", instance_id=0):
     """Returns the highest volume of rooms in a zone rendering service.
 
@@ -164,6 +188,7 @@ def get_volume(location, channel="Master", instance_id=0):
     return response["CurrentVolume"]
 
 
+@exception_handler
 def set_volume(location, desired_volume, channel="Master", instance_id=0):
     """Returns the highest volume of rooms in a zone rendering service.
 
@@ -184,6 +209,7 @@ def set_volume(location, desired_volume, channel="Master", instance_id=0):
     )
 
 
+@exception_handler
 def play_system_sound(location, sound="Success", instance_id=0):
     """Plays a one out of two available system sounds.
 
@@ -205,6 +231,7 @@ def play_system_sound(location, sound="Success", instance_id=0):
     device.RenderingControl.PlaySystemSound(InstanceID=instance_id, Sound=sound)
 
 
+@exception_handler
 def set_av_transport_uri(
     location, current_uri, current_uri_meta_data="", instance_id=0
 ):
@@ -216,37 +243,44 @@ def set_av_transport_uri(
     )
 
 
+@exception_handler
 def stop(location, instance_id=0):
     device = upnpclient.Device(location)
     device.AVTransport.Stop(InstanceID=instance_id)
 
 
+@exception_handler
 def set_play_mode(location, play_mode, instance_id=0):
     device = upnpclient.Device(location)
     device.AVTransport.SetPlayMode(InstanceID=instance_id, NewPlayMode=play_mode)
 
 
+@exception_handler
 def get_transport_settings(location, instance_id=0):
     device = upnpclient.Device(location)
     transport_settings = device.AVTransport.GetTransportSettings(InstanceID=instance_id)
     return transport_settings
 
 
+@exception_handler
 def play(location, speed="1", instance_id=0):
     device = upnpclient.Device(location)
     device.AVTransport.Play(InstanceID=instance_id, Speed=speed)
 
 
+@exception_handler
 def pause(location, instance_id=0):
     device = upnpclient.Device(location)
     device.AVTransport.Pause(InstanceID=instance_id)
 
 
+@exception_handler
 def seek(location, unit, target, instance_id=0):
     device = upnpclient.Device(location)
     device.AVTransport.Seek(InstanceID=instance_id, Unit=unit, Target=target)
 
 
+@exception_handler
 def browse(
     location,
     object_id=0,
@@ -269,6 +303,7 @@ def browse(
     return response["Result"]
 
 
+@exception_handler
 def search(
     location,
     container_id=0,
@@ -290,82 +325,96 @@ def search(
     return response["Result"]
 
 
+@exception_handler
 def get_media_info(location, instance_id=0):
     device = upnpclient.Device(location)
     response = device.AVTransport.GetMediaInfo(InstanceID=instance_id)
     return response
 
 
+@exception_handler
 def get_transport_info(location, instance_id=0):
     device = upnpclient.Device(location)
     response = device.AVTransport.GetTransportInfo(InstanceID=instance_id)
     return response
 
 
+@exception_handler
 def get_position_info(location, instance_id=0):
     device = upnpclient.Device(location)
     response = device.AVTransport.GetPositionInfo(InstanceID=instance_id)
     return response
 
 
+@exception_handler
 def get_search_capabilities(location):
     device = upnpclient.Device(location)
     response = device.ContentDirectory.GetSearchCapabilities()
     return response
 
 
+@exception_handler
 def next(location, instance_id=0):
     device = upnpclient.Device(location)
     device.AVTransport.Next(InstanceID=instance_id)
 
 
+@exception_handler
 def previous(location, instance_id=0):
     device = upnpclient.Device(location)
     device.AVTransport.Previous(InstanceID=instance_id)
 
 
+@exception_handler
 def get_device(location, service):
     device = upnpclient.Device(location)
     response = device.SetupService.GetDevice(Service=service)
     return response["UniqueDeviceName"]
 
 
+@exception_handler
 def get_info(location):
     device = upnpclient.Device(location)
     response = device.SetupService.GetInfo()
     return response["SoftwareVersion"]
 
 
+@exception_handler
 def get_update_info(location):
     device = upnpclient.Device(location)
     response = device.SetupService.GetUpdateInfo()
     return response
 
 
+@exception_handler
 def get_manufacturer(location):
     device = upnpclient.Device(location)
     response = device.manufacturer
     return response
 
 
+@exception_handler
 def get_manufacturer_url(location):
     device = upnpclient.Device(location)
     response = device.manufacturer_url
     return response
 
 
+@exception_handler
 def get_model_name(location):
     device = upnpclient.Device(location)
     response = device.model_name
     return response
 
 
+@exception_handler
 def get_model_number(location):
     device = upnpclient.Device(location)
     response = device.model_number
     return response
 
 
+@exception_handler
 def get_serial_number(location):
     device = upnpclient.Device(location)
     response = device.serial_number
