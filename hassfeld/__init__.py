@@ -42,6 +42,11 @@ def log_info(message):
     logger.info(message)
 
 
+def log_warn(message):
+    """Logging of warnings."""
+    logger.warning(message)
+
+
 def log_critical(message):
     """Logging of information."""
     logger.critical(message)
@@ -214,9 +219,16 @@ class RaumfeldHost:
                     room_udn = room_itm["@udn"]
                     zone_rooms.append(room_name)
                     self.lists["rooms"].append(room_name)
-                    self.resolve["roomudn_to_powerstate"][room_udn] = room_itm[
-                        "@powerState"
-                    ]
+                    if "@powerState" in room_itm:
+                        self.resolve["roomudn_to_powerstate"][room_udn] = room_itm[
+                            "@powerState"
+                        ]
+                    else:
+                        log_warn(
+                            "No 'powerState' attribute provided for room: %s"
+                            % room_name
+                        )
+                        self.resolve["roomudn_to_powerstate"][room_udn] = None
                     self.resolve["room_to_udn"][room_name] = room_udn
                     self.resolve["udn_to_room"][room_udn] = room_name
                     self.resolve["zoneudn_to_roomudnlst"][zone_udn].append(room_udn)
@@ -227,7 +239,15 @@ class RaumfeldHost:
             for room in self.wsd["zone_config"]["unassignedRooms"]["room"]:
                 room_name = room["@name"]
                 room_udn = room["@udn"]
-                self.resolve["roomudn_to_powerstate"][room_udn] = room["@powerState"]
+                if "@powerState" in room:
+                    self.resolve["roomudn_to_powerstate"][room_udn] = room[
+                        "@powerState"
+                    ]
+                else:
+                    log_warn(
+                        "No 'powerState' attribute provided for room: %s" % room_name
+                    )
+                    self.resolve["roomudn_to_powerstate"][room_udn] = None
                 self.resolve["room_to_udn"][room_name] = room_udn
                 self.resolve["udn_to_room"][room_udn] = room_name
                 self.lists["rooms"].append(room_name)
