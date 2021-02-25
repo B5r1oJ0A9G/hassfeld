@@ -350,12 +350,15 @@ class RaumfeldHost:
 
     def roomudnlst_to_zoneudn(self, udn_lst):
         """Convert list of room UDN to zone UDN."""
+        match = None
         zone_udnlst = self.resolve["zoneudn_to_roomudnlst"].keys()
         for zone_udn in zone_udnlst:
             if zone_udn in self.resolve["zoneudn_to_roomudnlst"]:
                 zoneroom_udnlst = self.resolve["zoneudn_to_roomudnlst"][zone_udn]
                 if aux.lists_have_same_values(zoneroom_udnlst, udn_lst):
-                    return zone_udn
+                    match = zone_udn
+                    break
+        return match
 
     def __wait_zone_creation(self, old_zone_udn, new_zone_room_lst):
         """Wait for zone creation published and recevied."""
