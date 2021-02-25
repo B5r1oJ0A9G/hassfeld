@@ -9,6 +9,7 @@ from .constants import BROWSE_CHILDREN
 
 def exception_handler(function):
     """Handling exceptions as decorator."""
+
     def new_function(*args, **kwargs):
         try:
             result = function(*args, **kwargs)
