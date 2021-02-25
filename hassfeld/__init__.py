@@ -519,7 +519,7 @@ class RaumfeldHost:
         self,
         container_id=0,
         search_criteria="",
-        filter="*",
+        filter_criteria="*",
         starting_index=0,
         requested_count=0,
         sort_criteria="",
@@ -534,7 +534,7 @@ class RaumfeldHost:
             media_server_loc,
             container_id,
             search_criteria,
-            filter,
+            filter_criteria,
             starting_index,
             requested_count,
             sort_criteria,
@@ -604,13 +604,12 @@ class RaumfeldHost:
 
     def get_position_info(self, zone_room_lst):
         """Get play information from zone."""
+        response = False
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         if zone_udn is not None:
             zone_loc = self.resolve["udn_to_devloc"][zone_udn]
             response = upnp.get_position_info(zone_loc)
-            return response
-        else:
-            return False
+        return response
 
     def get_zone_position(self, zone_room_lst):
         """Get play position from zone."""
