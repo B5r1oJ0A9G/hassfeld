@@ -14,7 +14,7 @@ def exception_handler(function):
             result = function(*args, **kwargs)
             return result
         except:
-            exc_info = f"%s%s" % (sys.exc_info()[0], sys.exc_info()[1])
+            exc_info = "%s%s" % (sys.exc_info()[0], sys.exc_info()[1])
             name = function.__name__
             log_error("Unexpected error with %s: %s" % (name, exc_info))
 
