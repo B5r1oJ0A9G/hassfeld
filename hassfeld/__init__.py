@@ -14,12 +14,12 @@ import xmltodict
 from . import auxilliary as aux
 from . import upnp
 from . import webservice as ws
-from .common import log_critical, log_warn, logger
+from .common import log_critical, log_info, log_warn, logger
 from .constants import (BROWSE_CHILDREN, CID_SEARCH_ALLTRACKS,
                         DEFAULT_PORT_WEBSERVICE, DELAY_FAST_UPDATE_CHECKS,
                         DELAY_REQUEST_FAILURE_LONG_POLLING, MAX_RETRIES,
                         PREFERRED_TIMEOUT_LONG_POLLING, REQUIRED_METADATA,
-                        TIMEOUT_WEBSERVICE_ACTION,
+                        TIMEOUT_LONG_POLLING, TIMEOUT_WEBSERVICE_ACTION,
                         TRANSPORT_STATE_TRANSITIONING, TRIGGER_UPDATE_DEVICES,
                         TRIGGER_UPDATE_HOST_INFO, TRIGGER_UPDATE_SYSTEM_STATE,
                         TRIGGER_UPDATE_ZONE_CONFIG, TYPE_MEDIA_SERVER,
@@ -141,13 +141,14 @@ class RaumfeldHost:
 
     async def __long_polling(self, url, _callback):
         update_id = None
+        timeout = aiohttp.ClientTimeout(total=TIMEOUT_LONG_POLLING)
         prefer_wait = "wait=" + str(PREFERRED_TIMEOUT_LONG_POLLING)
         headers = {"Prefer": prefer_wait}
         while True:
             if update_id:
                 headers["updateID"] = update_id
             try:
-                async with aiohttp.ClientSession() as session:
+                async with aiohttp.ClientSession(timeout=timeout) as session:
                     async with session.get(url, headers=headers) as response:
                         if response.status == 200:
                             update_id = response.headers["updateID"]
@@ -155,6 +156,8 @@ class RaumfeldHost:
                         elif response.status != 304:
                             await asyncio.sleep(DELAY_REQUEST_FAILURE_LONG_POLLING)
                             continue
+            except asyncio.exceptions.TimeoutError:
+                log_info("Long-polling timed out")
             except:
                 exc_info = f"%s%s" % (sys.exc_info()[0], sys.exc_info()[1])
                 log_critical("Long-polling failed with error: %s" % exc_info)
