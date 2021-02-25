@@ -690,7 +690,6 @@ class RaumfeldHost:
 
     def get_media_image_url(self, zone_room_lst):
         """Return hyper-link of media image."""
-        image_url = None
         media_info = self.get_media_info(zone_room_lst)
         metadata_xml = media_info["CurrentURIMetaData"]
         metadata = xmltodict.parse(metadata_xml)
