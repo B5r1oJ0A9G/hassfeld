@@ -166,7 +166,7 @@ class RaumfeldHost:
             except asyncio.exceptions.TimeoutError:
                 log_info("Long-polling timed out")
             except:
-                exc_info = f"%s%s" % (sys.exc_info()[0], sys.exc_info()[1])
+                exc_info = "%s%s" % (sys.exc_info()[0], sys.exc_info()[1])
                 log_critical("Long-polling failed with error: %s" % exc_info)
             await asyncio.sleep(DELAY_FAST_UPDATE_CHECKS)
 
