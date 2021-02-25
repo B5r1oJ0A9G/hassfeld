@@ -93,10 +93,7 @@ class RaumfeldHost:
             return False
 
         host_info = xmltodict.parse(response_xml)
-        if "hostName" in host_info["hostInfo"]:
-            return True
-        else:
-            return False
+        return bool("hostName" in host_info["hostInfo"])
 
     #
     # Functions for backgorund data updates from Raumfeld host.
