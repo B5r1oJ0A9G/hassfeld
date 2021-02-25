@@ -1,8 +1,6 @@
 """Module to interface with Raumfeld smart speakers"""
 import asyncio
-import inspect
 import json
-import os
 import sys
 import threading
 from time import sleep
