@@ -71,7 +71,7 @@ class RaumfeldHost:
         }
 
         # up-to-date data derived from "self.wsd".
-        media_server_udn = ""
+        self.media_server_udn = ""
         self.update_available = False
 
     def set_logging_level(self, level):
