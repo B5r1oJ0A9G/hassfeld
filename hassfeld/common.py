@@ -1,5 +1,6 @@
 """Functions commonly used"""
 import logging
+import inspect
 
 from . import __name__ as MODULE_NAME
 
