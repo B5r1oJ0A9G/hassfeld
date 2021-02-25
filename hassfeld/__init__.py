@@ -362,7 +362,7 @@ class RaumfeldHost:
         max_attempts = int(TIMEOUT_WEBSERVICE_ACTION / DELAY_FAST_UPDATE_CHECKS)
         for i in range(0, max_attempts):
             new_zone_udn = self.roomudnlst_to_zoneudn(new_zone_room_lst)
-            if new_zone_udn == None:
+            if new_zone_udn is None:
                 sleep(DELAY_FAST_UPDATE_CHECKS)
             elif new_zone_udn == old_zone_udn:
                 sleep(DELAY_FAST_UPDATE_CHECKS)
@@ -374,24 +374,15 @@ class RaumfeldHost:
     def zone_is_valid(self, room_lst):
         """Check whether passed zone is valid."""
         zone = sorted(room_lst)
-        if zone in self.lists["zones"]:
-            return True
-        else:
-            return False
+        return bool(zone in self.lists["zones"])
 
     def room_is_valid(self, room):
         """Check whether passed room is valid."""
-        if room in self.lists["rooms"]:
-            return True
-        else:
-            return False
+        return bool(room in self.lists["rooms"])
 
     def location_is_valid(self, location):
         """Check whether passed location is valid."""
-        if location in self.lists["locations"]:
-            return True
-        else:
-            return False
+        return bool(location in self.lists["locations"])
 
     def get_room_power_state(self, room):
         """Get current power state of a room."""
