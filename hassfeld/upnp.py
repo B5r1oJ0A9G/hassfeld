@@ -8,6 +8,7 @@ from .constants import BROWSE_CHILDREN
 
 
 def exception_handler(function):
+    """Handling exceptions as decorator."""
     def new_function(*args, **kwargs):
         try:
             result = function(*args, **kwargs)
@@ -235,6 +236,7 @@ def play_system_sound(location, sound="Success", instance_id=0):
 def set_av_transport_uri(
     location, current_uri, current_uri_meta_data="", instance_id=0
 ):
+    """Set media to play."""
     device = upnpclient.Device(location)
     device.AVTransport.SetAVTransportURI(
         InstanceID=instance_id,
@@ -245,18 +247,21 @@ def set_av_transport_uri(
 
 @exception_handler
 def stop(location, instance_id=0):
+    """Stop playing media."""
     device = upnpclient.Device(location)
     device.AVTransport.Stop(InstanceID=instance_id)
 
 
 @exception_handler
 def set_play_mode(location, play_mode, instance_id=0):
+    """Set play mode."""
     device = upnpclient.Device(location)
     device.AVTransport.SetPlayMode(InstanceID=instance_id, NewPlayMode=play_mode)
 
 
 @exception_handler
 def get_transport_settings(location, instance_id=0):
+    """Return transport settings."""
     device = upnpclient.Device(location)
     transport_settings = device.AVTransport.GetTransportSettings(InstanceID=instance_id)
     return transport_settings
@@ -264,18 +269,21 @@ def get_transport_settings(location, instance_id=0):
 
 @exception_handler
 def play(location, speed="1", instance_id=0):
+    """Play media."""
     device = upnpclient.Device(location)
     device.AVTransport.Play(InstanceID=instance_id, Speed=speed)
 
 
 @exception_handler
 def pause(location, instance_id=0):
+    """Paus playing media."""
     device = upnpclient.Device(location)
     device.AVTransport.Pause(InstanceID=instance_id)
 
 
 @exception_handler
 def seek(location, unit, target, instance_id=0):
+    """Seek to position."""
     device = upnpclient.Device(location)
     device.AVTransport.Seek(InstanceID=instance_id, Unit=unit, Target=target)
 
@@ -291,6 +299,7 @@ def browse(
     sort_criteria="",
     http_headers=None,
 ):
+    """Browse media."""
     device = upnpclient.Device(location, http_headers=http_headers)
     response = device.ContentDirectory.Browse(
         ObjectID=object_id,
@@ -313,6 +322,7 @@ def search(
     requested_count=0,
     sort_criteria="",
 ):
+    """Search media."""
     device = upnpclient.Device(location)
     response = device.ContentDirectory.Search(
         ContainerID=container_id,
@@ -327,6 +337,7 @@ def search(
 
 @exception_handler
 def get_media_info(location, instance_id=0):
+    """Return media information."""
     device = upnpclient.Device(location)
     response = device.AVTransport.GetMediaInfo(InstanceID=instance_id)
     return response
@@ -334,6 +345,7 @@ def get_media_info(location, instance_id=0):
 
 @exception_handler
 def get_transport_info(location, instance_id=0):
+    """Return transport information."""
     device = upnpclient.Device(location)
     response = device.AVTransport.GetTransportInfo(InstanceID=instance_id)
     return response
@@ -341,32 +353,29 @@ def get_transport_info(location, instance_id=0):
 
 @exception_handler
 def get_position_info(location, instance_id=0):
+    """Return position information."""
     device = upnpclient.Device(location)
     response = device.AVTransport.GetPositionInfo(InstanceID=instance_id)
     return response
 
 
 @exception_handler
-def get_search_capabilities(location):
-    device = upnpclient.Device(location)
-    response = device.ContentDirectory.GetSearchCapabilities()
-    return response
-
-
-@exception_handler
-def next(location, instance_id=0):
+def next_track(location, instance_id=0):
+    """Play next track."""
     device = upnpclient.Device(location)
     device.AVTransport.Next(InstanceID=instance_id)
 
 
 @exception_handler
-def previous(location, instance_id=0):
+def previous_track(location, instance_id=0):
+    """Play previous track."""
     device = upnpclient.Device(location)
     device.AVTransport.Previous(InstanceID=instance_id)
 
 
 @exception_handler
 def get_device(location, service):
+    """Return unique device name."""
     device = upnpclient.Device(location)
     response = device.SetupService.GetDevice(Service=service)
     return response["UniqueDeviceName"]
@@ -374,6 +383,7 @@ def get_device(location, service):
 
 @exception_handler
 def get_info(location):
+    """Return softwre version."""
     device = upnpclient.Device(location)
     response = device.SetupService.GetInfo()
     return response["SoftwareVersion"]
@@ -381,6 +391,7 @@ def get_info(location):
 
 @exception_handler
 def get_update_info(location):
+    """Return software update information."""
     device = upnpclient.Device(location)
     response = device.SetupService.GetUpdateInfo()
     return response
@@ -388,6 +399,7 @@ def get_update_info(location):
 
 @exception_handler
 def get_manufacturer(location):
+    """Return manufacturer name."""
     device = upnpclient.Device(location)
     response = device.manufacturer
     return response
@@ -395,6 +407,7 @@ def get_manufacturer(location):
 
 @exception_handler
 def get_manufacturer_url(location):
+    """Return manufacturer hyper-link."""
     device = upnpclient.Device(location)
     response = device.manufacturer_url
     return response
@@ -402,6 +415,7 @@ def get_manufacturer_url(location):
 
 @exception_handler
 def get_model_name(location):
+    """Return model name."""
     device = upnpclient.Device(location)
     response = device.model_name
     return response
@@ -409,6 +423,7 @@ def get_model_name(location):
 
 @exception_handler
 def get_model_number(location):
+    """Return model number."""
     device = upnpclient.Device(location)
     response = device.model_number
     return response
@@ -416,6 +431,7 @@ def get_model_number(location):
 
 @exception_handler
 def get_serial_number(location):
+    """Return serial number."""
     device = upnpclient.Device(location)
     response = device.serial_number
     return response

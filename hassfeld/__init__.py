@@ -485,13 +485,13 @@ class RaumfeldHost:
         """Play next track of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        upnp.next(zone_loc)
+        upnp.next_track(zone_loc)
 
     def zone_previous_track(self, zone_room_lst):
         """Play previous track of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        upnp.previous(zone_loc)
+        upnp.previous_track(zone_loc)
 
     def browse_media_server(self, object_id, browse_flag):
         """Browse media on the media server."""
