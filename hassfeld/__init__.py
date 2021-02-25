@@ -36,6 +36,7 @@ class RaumfeldHost:
         self.port = str(port)
         self.location = "http://" + self.host + ":" + self.port
         self.snap = {}
+        self._loop = None
 
         # up-to-date data from Raumfeld web service
         self.wsd = {
