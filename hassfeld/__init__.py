@@ -1,4 +1,4 @@
-"""Module to interface with Raumfeld smart speakers"""
+"""Module to interface with Raumfeld smart speakers."""
 import asyncio
 import json
 import sys
@@ -26,10 +26,12 @@ from .constants import (BROWSE_CHILDREN, CID_SEARCH_ALLTRACKS,
 
 
 class RaumfeldHost:
+    """Class representing a Raumfeld host"""
 
     callback = None
 
     def __init__(self, host, port=DEFAULT_PORT_WEBSERVICE):
+        """Initialize raumfeld host."""
         self.host = host
         self.port = str(port)
         self.location = "http://" + self.host + ":" + self.port
@@ -73,9 +75,11 @@ class RaumfeldHost:
         self.update_available = False
 
     def set_logging_level(self, level):
+        """set logging level of hassfeld."""
         logger.setLevel(level)
 
     async def async_host_is_valid(self):
+        """Check whether host is a valid raumfeld host."""
         url = self.location + "/getHostInfo"
         timeout = aiohttp.ClientTimeout(total=3)
         session = aiohttp.ClientSession(timeout=timeout)
@@ -99,6 +103,7 @@ class RaumfeldHost:
     #
 
     def start_update_thread(self):
+        """Start dedicated thread for web service data updates."""
         # Background thread updating "self.wsd".
         self._loop = asyncio.new_event_loop()
         threading.Thread(target=self._loop.run_forever, daemon=True).start()
@@ -110,6 +115,7 @@ class RaumfeldHost:
             sleep(DELAY_FAST_UPDATE_CHECKS)
 
     async def __async_update(self):
+        """Execut all update loops in a group."""
         await asyncio.gather(
             self.async_update_gethostinfo(),
             self.async_update_getzones(),
@@ -118,26 +124,31 @@ class RaumfeldHost:
         )
 
     async def async_update_gethostinfo(self):
+        """Update loop for host information."""
         while True:
             url = self.location + "/getHostInfo"
             await self.__long_polling(url, self.__update_host_info)
 
     async def async_update_getzones(self):
+        """Update loop for zone information."""
         while True:
             url = self.location + "/getZones"
             await self.__long_polling(url, self.__update_zone_config)
 
     async def async_update_listdevices(self):
+        """Update loop for device information."""
         while True:
             url = self.location + "/listDevices"
             await self.__long_polling(url, self.__update_devices)
 
     async def async_update_systemstatechannel(self):
+        """Update loop for software update information."""
         while True:
             url = self.location + "/SystemStateChannel"
             await self.__long_polling(url, self.__update_system_state)
 
     async def __long_polling(self, url, _callback):
+        """Long-polling of web service interface."""
         update_id = None
         timeout = aiohttp.ClientTimeout(total=TIMEOUT_LONG_POLLING)
         prefer_wait = "wait=" + str(PREFERRED_TIMEOUT_LONG_POLLING)
@@ -166,6 +177,7 @@ class RaumfeldHost:
     #
 
     def __update_host_info(self, content_xml):
+        """Update internal data strucrure with host information."""
         gethostinfo = xmltodict.parse(content_xml)
         self.wsd["host_info"] = gethostinfo["hostInfo"]
 
@@ -175,6 +187,7 @@ class RaumfeldHost:
             self.callback(TRIGGER_UPDATE_HOST_INFO)
 
     def __update_zone_config(self, content_xml):
+        """Update internal data strucrure with zone information."""
         self.lists["rooms"] = []
         self.lists["zones"] = []
         self.resolve["roomudn_to_powerstate"] = {}
@@ -235,6 +248,7 @@ class RaumfeldHost:
             self.callback(TRIGGER_UPDATE_ZONE_CONFIG)
 
     def __update_devices(self, content_xml):
+        """Update internal data strucrure with device information."""
         self.lists["locations"] = []
         self.lists["raumfeld_device_udns"] = []
         self.resolve["devudn_to_name"] = {}
@@ -264,6 +278,7 @@ class RaumfeldHost:
             self.callback(TRIGGER_UPDATE_DEVICES)
 
     def __update_system_state(self, content_xml):
+        """Update internal data strucrure with software update information."""
         systemstatechannel = xmltodict.parse(content_xml)
         self.wsd["system_state"] = systemstatechannel["systemState"]
 
@@ -294,25 +309,31 @@ class RaumfeldHost:
         return zone_lst
 
     def get_rooms(self):
+        """Return list of rooms."""
         room_lst = self.lists["rooms"]
         return room_lst
 
     def get_raumfeld_device_udns(self):
+        """Return list of unified device names."""
         devudn_lst = self.lists["raumfeld_device_udns"]
         return devudn_lst
 
     def device_udn_to_name(self, device_udn):
+        """Convert device udn to device name."""
         device_name = self.resolve["devudn_to_name"][device_udn]
         return device_name
 
     def device_udn_to_location(self, device_udn):
+        """Convert device udn to device location."""
         device_location = self.resolve["udn_to_devloc"][device_udn]
         return device_location
 
     def get_host_room(self):
+        """Return room of raumfeld host."""
         return self.wsd["host_info"]["roomName"]
 
     def get_host_name(self):
+        """Return raumfeld host's host name."""
         return self.wsd["host_info"]["hostName"]
 
     def roomlst_to_udnlst(self, room_lst):
@@ -324,11 +345,13 @@ class RaumfeldHost:
         return udn_lst
 
     def roomlst_to_zoneudn(self, room_lst):
+        """Convert list of rooms to zone UDN."""
         udn_lst = self.roomlst_to_udnlst(room_lst)
         zone_udn = self.roomudnlst_to_zoneudn(udn_lst)
         return zone_udn
 
     def roomudnlst_to_zoneudn(self, udn_lst):
+        """Convert list of room UDN to zone UDN."""
         zone_udnlst = self.resolve["zoneudn_to_roomudnlst"].keys()
         for zone_udn in zone_udnlst:
             if zone_udn in self.resolve["zoneudn_to_roomudnlst"]:
@@ -351,6 +374,7 @@ class RaumfeldHost:
                 break
 
     def zone_is_valid(self, room_lst):
+        """Check whether passed zone is valid."""
         zone = sorted(room_lst)
         if zone in self.lists["zones"]:
             return True
@@ -358,18 +382,21 @@ class RaumfeldHost:
             return False
 
     def room_is_valid(self, room):
+        """Check whether passed room is valid."""
         if room in self.lists["rooms"]:
             return True
         else:
             return False
 
     def location_is_valid(self, location):
+        """Check whether passed location is valid."""
         if location in self.lists["locations"]:
             return True
         else:
             return False
 
     def get_room_power_state(self, room):
+        """Get current power state of a room."""
         if self.room_is_valid(room):
             room_udn = self.resolve["room_to_udn"][room]
             power_state = self.resolve["roomudn_to_powerstate"][room_udn]
@@ -382,7 +409,7 @@ class RaumfeldHost:
     #
 
     def create_zone(self, room_lst):
-        """Create a new zone based on list of rooms
+        """Create a new zone based on list of rooms.
 
         Parameters:
         room_lst -- List of rooms defining a zone.
@@ -417,57 +444,68 @@ class RaumfeldHost:
                 upnp.set_room_volume(zone_loc, room_udn, volume, instance_id=0)
 
     def set_zone_mute(self, zone_room_lst, mute=True):
+        """Mute zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         upnp.set_mute(zone_loc, mute)
 
     def get_zone_mute(self, zone_room_lst):
+        """Get mute status of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         mute = upnp.get_mute(zone_loc)
         return mute
 
     def set_zone_volume(self, zone_room_lst, volume):
+        """Set volume to absolute level."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         upnp.set_volume(zone_loc, volume)
 
     def change_zone_volume(self, zone_room_lst, amount):
+        """Change the volume of zone up or down."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         upnp.change_volume(zone_loc, amount)
 
     def zone_stop(self, zone_room_lst):
+        """Stop playing media on zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         upnp.stop(zone_loc)
 
     def zone_play(self, zone_room_lst):
+        """Play media on zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         upnp.play(zone_loc)
 
     def zone_pause(self, zone_room_lst):
+        """Pause playing media on zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         upnp.pause(zone_loc)
 
     def zone_seek(self, zone_room_lst, target):
+        """Seek to position on zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         upnp.seek(zone_loc, "ABS_TIME", target)
 
     def zone_next_track(self, zone_room_lst):
+        """Play next track of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         upnp.next(zone_loc)
 
     def zone_previous_track(self, zone_room_lst):
+        """Play previous track of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         upnp.previous(zone_loc)
 
     def browse_media_server(self, object_id, browse_flag):
+        """Browse media on the media server."""
         http_headers = None
 
         if browse_flag == BROWSE_CHILDREN:
@@ -488,7 +526,7 @@ class RaumfeldHost:
         requested_count=0,
         sort_criteria="",
     ):
-        """Search the media server
+        """Search the media server.
 
         Parameters:
         search_criteria='raumfeld:any contains "No son of mine"
@@ -539,29 +577,35 @@ class RaumfeldHost:
     def search_and_zone_play(
         self, zone_room_lst, search_criteria, container_id=CID_SEARCH_ALLTRACKS
     ):
+        """Search for track and play first found."""
         uri, uri_metadata = self.search_for_play(container_id, search_criteria)
         self.set_av_transport_uri(zone_room_lst, uri, uri_metadata)
 
     def get_media_info(self, zone_room_lst):
+        """Get media information of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         return upnp.get_media_info(zone_loc)
 
     def get_play_mode(self, zone_room_lst):
+        """Get play mode of zone."""
         transport_info = self.get_transport_settings(zone_room_lst)
         return transport_info["PlayMode"]
 
     def get_transport_info(self, zone_room_lst):
+        """Get transport information of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         return upnp.get_transport_info(zone_loc)
 
     def get_zone_volume(self, zone_room_lst):
+        """Get volume of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         return upnp.get_volume(zone_loc)
 
     def get_position_info(self, zone_room_lst):
+        """Get play information from zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         if zone_udn is not None:
             zone_loc = self.resolve["udn_to_devloc"][zone_udn]
@@ -571,20 +615,24 @@ class RaumfeldHost:
             return False
 
     def get_zone_position(self, zone_room_lst):
+        """Get play position from zone."""
         position_info = self.get_position_info(zone_room_lst)
         return position_info["AbsTime"]
 
     def get_transport_settings(self, zone_room_lst):
+        """Get transport settings from zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         return upnp.get_transport_settings(zone_loc)
 
     def set_play_mode(self, zone_room_lst, play_mode):
+        """Set play mode of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         upnp.set_play_mode(zone_loc, play_mode)
 
     def save_zone(self, zone_room_lst, repl_snap=False):
+        """Create backup of media state for later restore."""
         media_info = self.get_media_info(zone_room_lst)
         position_info = self.get_position_info(zone_room_lst)
         volume = self.get_zone_volume(zone_room_lst)
@@ -599,6 +647,7 @@ class RaumfeldHost:
             self.snap[key]["mute"] = mute
 
     def restore_zone(self, zone_room_lst, del_snap=True):
+        """restore media state from previous snapshot."""
         key = repr(zone_room_lst)
         retries = 0
         if key in self.snap:
@@ -623,14 +672,17 @@ class RaumfeldHost:
                 self.snap.pop(key, None)
 
     def enter_automatic_standby(self, room):
+        """Put room speakers into automatic stand-by."""
         room_udn = self.resolve["room_to_udn"][room]
         ws.enter_automatic_standby(self.location, room_udn)
 
     def enter_manual_standby(self, room):
+        """Put room speakers into manual stand-by (turn off)."""
         room_udn = self.resolve["room_to_udn"][room]
         ws.enter_manual_standby(self.location, room_udn)
 
     def leave_standby(self, room):
+        """Weak room speakers up from stand-by."""
         room_udn = self.resolve["room_to_udn"][room]
         ws.leave_standby(self.location, room_udn)
 
@@ -639,6 +691,7 @@ class RaumfeldHost:
     #
 
     def get_media_image_url(self, zone_room_lst):
+        """Return hyper-link of media image."""
         image_url = None
         media_info = self.get_media_info(zone_room_lst)
         metadata_xml = media_info["CurrentURIMetaData"]
