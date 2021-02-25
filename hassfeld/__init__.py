@@ -683,15 +683,3 @@ class RaumfeldHost:
         """Weak room speakers up from stand-by."""
         room_udn = self.resolve["room_to_udn"][room]
         ws.leave_standby(self.location, room_udn)
-
-    #
-    # Home Assistent specific
-    #
-
-    def get_media_image_url(self, zone_room_lst):
-        """Return hyper-link of media image."""
-        media_info = self.get_media_info(zone_room_lst)
-        metadata_xml = media_info["CurrentURIMetaData"]
-        metadata = xmltodict.parse(metadata_xml)
-        image_url = metadata["DIDL-Lite"]["container"]["upnp:albumArtURI"]
-        return media_info
