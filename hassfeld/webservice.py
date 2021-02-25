@@ -111,5 +111,5 @@ def ping(location):
     url = location + "/Ping"
 
     response = requests.get(url)
-    ping = xmltodict.parse(response.content)
-    return ping["response"]
+    pong = xmltodict.parse(response.content)
+    return pong["response"]
