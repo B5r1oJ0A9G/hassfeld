@@ -16,7 +16,7 @@ def exception_handler(function):
         except:
             exc_info = f"%s%s" % (sys.exc_info()[0], sys.exc_info()[1])
             name = function.__name__
-            log_error("Unexpected error with %s: %s" % (function.__name__, exc_info))
+            log_error("Unexpected error with %s: %s" % (name, exc_info))
 
     return new_function
 
@@ -59,7 +59,7 @@ def set_mute(
     desired_mute --- Bolean value of True activaes the mute status and a
     value of False deactivates the mute status.
     """
-    if desired_mute == True:
+    if desired_mute:
         desired_mute = "1"
     else:
         desired_mute = "0"
@@ -140,7 +140,7 @@ def set_room_mute(location, room, desired_mute=True, instance_id=0):
     value of False deactivates the mute status.
     instance_id --
     """
-    if desired_mute == True:
+    if desired_mute:
         desired_mute = "1"
     else:
         desired_mute = "0"
