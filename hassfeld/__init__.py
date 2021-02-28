@@ -9,6 +9,7 @@ import aiohttp
 import requests
 import xmltodict
 
+from . import aioupnp
 from . import auxilliary as aux
 from . import upnp
 from . import webservice as ws
@@ -259,7 +260,10 @@ class RaumfeldHost:
             device_loc = device_itm["@location"]
             device_type = device_itm["@type"]
             device_udn = device_itm["@udn"]
-            device_name = device_itm["#text"]
+            if "#text" in device_itm:
+                device_name = device_itm["#text"]
+            else:
+                log_warn("Missing '#text' key for device with UDN: %s" % device_udn)
             self.lists["locations"].append(device_loc)
             self.resolve["devudn_to_name"][device_udn] = device_name
             self.resolve["udn_to_devloc"][device_udn] = device_loc
@@ -412,7 +416,7 @@ class RaumfeldHost:
         # Zone creation may take some time before taking effect.
         self.__wait_zone_creation(old_zone_udn, room_lst)
 
-    def set_zone_room_volume(self, zone_room_lst, volume, room_lst=None):
+    async def async_set_zone_room_volume(self, zone_room_lst, volume, room_lst=None):
         """Sets volume of rooms in a zone to same level.
 
         Parameters:
@@ -433,13 +437,15 @@ class RaumfeldHost:
         if zone_udn:
             for room_udn in room_udnlst:
                 zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-                upnp.set_room_volume(zone_loc, room_udn, volume, instance_id=0)
+                await aioupnp.async_set_room_volume(
+                    zone_loc, room_udn, volume, instance_id=0
+                )
 
-    def set_zone_mute(self, zone_room_lst, mute=True):
+    async def async_set_zone_mute(self, zone_room_lst, mute=True):
         """Mute zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        upnp.set_mute(zone_loc, mute)
+        await aioupnp.async_set_mute(zone_loc, mute)
 
     def get_zone_mute(self, zone_room_lst):
         """Get mute status of zone."""
@@ -448,53 +454,60 @@ class RaumfeldHost:
         mute = upnp.get_mute(zone_loc)
         return mute
 
-    def set_zone_volume(self, zone_room_lst, volume):
+    async def async_get_zone_mute(self, zone_room_lst):
+        """Get mute status of zone."""
+        zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
+        zone_loc = self.resolve["udn_to_devloc"][zone_udn]
+        mute = await aioupnp.async_get_mute(zone_loc)
+        return mute
+
+    async def async_set_zone_volume(self, zone_room_lst, volume):
         """Set volume to absolute level."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        upnp.set_volume(zone_loc, volume)
+        await aioupnp.async_set_volume(zone_loc, volume)
 
-    def change_zone_volume(self, zone_room_lst, amount):
+    async def async_change_zone_volume(self, zone_room_lst, amount):
         """Change the volume of zone up or down."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        upnp.change_volume(zone_loc, amount)
+        await aioupnp.async_change_volume(zone_loc, amount)
 
-    def zone_stop(self, zone_room_lst):
+    async def async_zone_stop(self, zone_room_lst):
         """Stop playing media on zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        upnp.stop(zone_loc)
+        await aioupnp.async_stop(zone_loc)
 
-    def zone_play(self, zone_room_lst):
+    async def async_zone_play(self, zone_room_lst):
         """Play media on zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        upnp.play(zone_loc)
+        await aioupnp.async_play(zone_loc)
 
-    def zone_pause(self, zone_room_lst):
+    async def async_zone_pause(self, zone_room_lst):
         """Pause playing media on zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        upnp.pause(zone_loc)
+        await aioupnp.async_pause(zone_loc)
 
-    def zone_seek(self, zone_room_lst, target):
+    async def async_zone_seek(self, zone_room_lst, target):
         """Seek to position on zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        upnp.seek(zone_loc, "ABS_TIME", target)
+        await aioupnp.async_seek(zone_loc, "ABS_TIME", target)
 
-    def zone_next_track(self, zone_room_lst):
+    async def async_zone_next_track(self, zone_room_lst):
         """Play next track of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        upnp.next_track(zone_loc)
+        await aioupnp.async_next_track(zone_loc)
 
-    def zone_previous_track(self, zone_room_lst):
+    async def async_zone_previous_track(self, zone_room_lst):
         """Play previous track of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        upnp.previous_track(zone_loc)
+        await aioupnp.async_previous_track(zone_loc)
 
     def browse_media_server(self, object_id, browse_flag):
         """Browse media on the media server."""
@@ -509,7 +522,7 @@ class RaumfeldHost:
             media_server_loc, object_id, browse_flag, http_headers=http_headers
         )
 
-    def search_media_server(
+    async def async_search_media_server(
         self,
         container_id=0,
         search_criteria="",
@@ -524,7 +537,7 @@ class RaumfeldHost:
         search_criteria='raumfeld:any contains "No son of mine"
         """
         media_server_loc = self.resolve["udn_to_devloc"][self.media_server_udn]
-        response = upnp.search(
+        response = await aioupnp.async_search(
             media_server_loc,
             container_id,
             search_criteria,
@@ -535,11 +548,11 @@ class RaumfeldHost:
         )
         return response
 
-    def search_for_play(self, container_id, search_criteria):
+    async def async_search_for_play(self, container_id, search_criteria):
         """Search for media and return uri and meta data."""
         requested_count = 1
         sort_criteria = "+upnp:artist,-dc:date,+dc:title"
-        metadata_xml = self.search_media_server(
+        metadata_xml = await self.async_search_media_server(
             container_id,
             search_criteria,
             requested_count=(requested_count),
@@ -554,7 +567,7 @@ class RaumfeldHost:
 
         return uri, metadata_xml
 
-    def set_av_transport_uri(
+    async def async_set_av_transport_uri(
         self, zone_room_lst, current_uri, current_uri_metadata=None
     ):
         """Set the URI of the track to play and it's meta data in a zone."""
@@ -562,16 +575,18 @@ class RaumfeldHost:
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         if current_uri_metadata is None:
             current_uri_metadata = xmltodict.unparse(REQUIRED_METADATA)
-        upnp.set_av_transport_uri(
+        await aioupnp.async_set_av_transport_uri(
             zone_loc, current_uri, current_uri_metadata, instance_id=0
         )
 
-    def search_and_zone_play(
+    async def async_search_and_zone_play(
         self, zone_room_lst, search_criteria, container_id=CID_SEARCH_ALLTRACKS
     ):
         """Search for track and play first found."""
-        uri, uri_metadata = self.search_for_play(container_id, search_criteria)
-        self.set_av_transport_uri(zone_room_lst, uri, uri_metadata)
+        uri, uri_metadata = await self.async_search_for_play(
+            container_id, search_criteria
+        )
+        await self.async_set_av_transport_uri(zone_room_lst, uri, uri_metadata)
 
     def get_media_info(self, zone_room_lst):
         """Get media information of zone."""
@@ -579,22 +594,28 @@ class RaumfeldHost:
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         return upnp.get_media_info(zone_loc)
 
-    def get_play_mode(self, zone_room_lst):
+    async def async_get_play_mode(self, zone_room_lst):
         """Get play mode of zone."""
-        transport_info = self.get_transport_settings(zone_room_lst)
+        transport_info = await self.async_get_transport_settings(zone_room_lst)
         return transport_info["PlayMode"]
 
-    def get_transport_info(self, zone_room_lst):
+    async def async_get_transport_info(self, zone_room_lst):
         """Get transport information of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        return upnp.get_transport_info(zone_loc)
+        return await aioupnp.async_get_transport_info(zone_loc)
 
     def get_zone_volume(self, zone_room_lst):
         """Get volume of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         return upnp.get_volume(zone_loc)
+
+    async def async_get_zone_volume(self, zone_room_lst):
+        """Get volume of zone."""
+        zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
+        zone_loc = self.resolve["udn_to_devloc"][zone_udn]
+        return await aioupnp.async_get_volume(zone_loc)
 
     def get_position_info(self, zone_room_lst):
         """Get play information from zone."""
@@ -610,17 +631,17 @@ class RaumfeldHost:
         position_info = self.get_position_info(zone_room_lst)
         return position_info["AbsTime"]
 
-    def get_transport_settings(self, zone_room_lst):
+    async def async_get_transport_settings(self, zone_room_lst):
         """Get transport settings from zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        return upnp.get_transport_settings(zone_loc)
+        return await aioupnp.async_get_transport_settings(zone_loc)
 
-    def set_play_mode(self, zone_room_lst, play_mode):
+    async def async_set_play_mode(self, zone_room_lst, play_mode):
         """Set play mode of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        upnp.set_play_mode(zone_loc, play_mode)
+        await aioupnp.async_set_play_mode(zone_loc, play_mode)
 
     def save_zone(self, zone_room_lst, repl_snap=False):
         """Create backup of media state for later restore."""
@@ -637,7 +658,7 @@ class RaumfeldHost:
             self.snap[key]["volume"] = volume
             self.snap[key]["mute"] = mute
 
-    def restore_zone(self, zone_room_lst, del_snap=True):
+    async def async_restore_zone(self, zone_room_lst, del_snap=True):
         """restore media state from previous snapshot."""
         key = repr(zone_room_lst)
         retries = 0
@@ -647,18 +668,18 @@ class RaumfeldHost:
             abs_time = self.snap[key]["abs_time"]
             volume = self.snap[key]["volume"]
             mute = self.snap[key]["mute"]
-            self.set_zone_volume(zone_room_lst, 0)
-            self.set_zone_mute(zone_room_lst, mute)
-            self.set_av_transport_uri(zone_room_lst, uri, metadata)
+            await self.async_set_zone_volume(zone_room_lst, 0)
+            await self.async_set_zone_mute(zone_room_lst, mute)
+            await self.async_set_av_transport_uri(zone_room_lst, uri, metadata)
             while retries < MAX_RETRIES:
-                transport_info = self.get_transport_info(zone_room_lst)
+                transport_info = await self.async_get_transport_info(zone_room_lst)
                 transport_state = transport_info["CurrentTransportState"]
                 if transport_state != TRANSPORT_STATE_TRANSITIONING:
                     break
                 sleep(DELAY_FAST_UPDATE_CHECKS)
                 retries += 1
-            self.zone_seek(zone_room_lst, abs_time)
-            self.set_zone_volume(zone_room_lst, volume)
+            await self.async_zone_seek(zone_room_lst, abs_time)
+            await self.async_set_zone_volume(zone_room_lst, volume)
             if del_snap:
                 self.snap.pop(key, None)
 
