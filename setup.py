@@ -5,7 +5,7 @@ with open("README.rst", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="hassfeld",
-    version="0.3.0-alpha",
+    version="0.3.1-alpha",
     description="Integration of Raumfeld into Home Assistant",
     long_description=long_description,
     long_description_content_type="text/x-rst",
