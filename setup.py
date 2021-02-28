@@ -19,6 +19,7 @@ setuptools.setup(
     python_requires='>=3.5',
     install_requires=[
         "aiohttp",
+        "async_upnp_client",
         "requests",
         "upnpclient",
         "xmltodict",
