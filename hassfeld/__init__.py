@@ -243,12 +243,8 @@ class RaumfeldHost:
                 self.resolve["udn_to_room"][room_udn] = room_name
                 self.lists["rooms"].append(room_name)
                 if "renderer" in room:
-                    #FIXME: Remove not True
-                    #if "@spotifyConnect" in room["renderer"]:
-                    if True:
-                        #FIXME: Remove True
-                        #if room["renderer"]["@spotifyConnect"] == "ACTIVE":
-                        if True:
+                    if "@spotifyConnect" in room["renderer"]:
+                        if room["renderer"]["@spotifyConnect"] == "ACTIVE":
                             renderer_udn = room["renderer"]["@udn"]
                             self.resolve["roomudn_to_rendudn"][room_udn] = renderer_udn
                             self.lists["spotify_renderer"].append(renderer_udn)
