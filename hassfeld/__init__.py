@@ -54,6 +54,7 @@ class RaumfeldHost:
             "udn_to_devloc": {},
             "udn_to_room": {},
             "roomudn_to_powerstate": {},
+            "roomudn_to_rendudn": {},
             "zoneudn_to_roomudnlst": {},
             "zone_to_rooms": {},
         }
@@ -62,6 +63,7 @@ class RaumfeldHost:
             "locations": [],
             "raumfeld_device_udns": [],
             "rooms": [],
+            "spotify_renderer": [],
             "zones": [],
         }
 
@@ -240,6 +242,16 @@ class RaumfeldHost:
                 self.resolve["room_to_udn"][room_name] = room_udn
                 self.resolve["udn_to_room"][room_udn] = room_name
                 self.lists["rooms"].append(room_name)
+                if "renderer" in room:
+                    #FIXME: Remove not True
+                    #if "@spotifyConnect" in room["renderer"]:
+                    if True:
+                        #FIXME: Remove True
+                        #if room["renderer"]["@spotifyConnect"] == "ACTIVE":
+                        if True:
+                            renderer_udn = room["renderer"]["@udn"]
+                            self.resolve["roomudn_to_rendudn"][room_udn] = renderer_udn
+                            self.lists["spotify_renderer"].append(renderer_udn)
 
         self.init_done["zone_config"] = True
 
@@ -387,6 +399,14 @@ class RaumfeldHost:
         """Check whether passed room is valid."""
         return bool(room in self.lists["rooms"])
 
+    def room_is_spotify_single_room(self, room):
+        """Check whether passed room is in spotify single-room mode."""
+        room_udn = self.resolve["room_to_udn"][room]
+        if room_udn in self.resolve["roomudn_to_rendudn"]:
+            rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
+            return bool(rend_udn in self.lists["spotify_renderer"])
+        return False
+
     def location_is_valid(self, location):
         """Check whether passed location is valid."""
         return bool(location in self.lists["locations"])
@@ -507,6 +527,28 @@ class RaumfeldHost:
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         await aioupnp.async_play(zone_loc)
+
+    def room_play(self, room):
+        """Play media on room."""
+        return asyncio.run(self.async_room_play(room))
+
+    async def async_room_play(self, room):
+        """Play media on room."""
+        room_udn = self.resolve["room_to_udn"][room]
+        rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
+        rend_loc = self.resolve["udn_to_devloc"][rend_udn]
+        await aioupnp.async_play(rend_loc)
+
+    def room_pause(self, room):
+        """Pause media on room."""
+        return asyncio.run(self.async_room_play(room))
+
+    async def async_room_play(self, room):
+        """Pause media on room."""
+        room_udn = self.resolve["room_to_udn"][room]
+        rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
+        rend_loc = self.resolve["udn_to_devloc"][rend_udn]
+        await aioupnp.async_pause(rend_loc)
 
     def zone_pause(self, zone_room_lst):
         """Pause playing media on zone."""
