@@ -528,28 +528,6 @@ class RaumfeldHost:
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         await aioupnp.async_play(zone_loc)
 
-    def room_play(self, room):
-        """Play media on room."""
-        return asyncio.run(self.async_room_play(room))
-
-    async def async_room_play(self, room):
-        """Play media on room."""
-        room_udn = self.resolve["room_to_udn"][room]
-        rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
-        rend_loc = self.resolve["udn_to_devloc"][rend_udn]
-        await aioupnp.async_play(rend_loc)
-
-    def room_pause(self, room):
-        """Pause media on room."""
-        return asyncio.run(self.async_room_play(room))
-
-    async def async_room_play(self, room):
-        """Pause media on room."""
-        room_udn = self.resolve["room_to_udn"][room]
-        rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
-        rend_loc = self.resolve["udn_to_devloc"][rend_udn]
-        await aioupnp.async_pause(rend_loc)
-
     def zone_pause(self, zone_room_lst):
         """Pause playing media on zone."""
         return asyncio.run(self.async_zone_pause(zone_room_lst))
@@ -884,3 +862,39 @@ class RaumfeldHost:
         """Weak room speakers up from stand-by."""
         room_udn = self.resolve["room_to_udn"][room]
         ws.leave_standby(self.location, room_udn)
+
+    # Spotify single-room methods
+
+    def room_play(self, room):
+        """Play media on room."""
+        return asyncio.run(self.async_room_play(room))
+
+    async def async_room_play(self, room):
+        """Play media on room."""
+        room_udn = self.resolve["room_to_udn"][room]
+        rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
+        rend_loc = self.resolve["udn_to_devloc"][rend_udn]
+        await aioupnp.async_play(rend_loc)
+
+    def room_pause(self, room):
+        """Pause media on room."""
+        return asyncio.run(self.async_room_pause(room))
+
+    async def async_room_pause(self, room):
+        """Pause media on room."""
+        room_udn = self.resolve["room_to_udn"][room]
+        rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
+        rend_loc = self.resolve["udn_to_devloc"][rend_udn]
+        await aioupnp.async_pause(rend_loc)
+
+    def get_room_transport_info(self, room):
+        """Get transport information of room."""
+        return asyncio.run(self.async_get_room_transport_info(room))
+
+    async def async_get_room_transport_info(self, room):
+        """Get transport information of room."""
+        room_udn = self.resolve["room_to_udn"][room]
+        rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
+        rend_loc = self.resolve["udn_to_devloc"][rend_udn]
+        return await aioupnp.async_get_transport_info(rend_loc)
+
