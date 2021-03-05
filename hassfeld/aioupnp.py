@@ -8,7 +8,7 @@ from .common import log_error
 from .constants import (BROWSE_CHILDREN, RESPONSE_KEY_CURRENT_MUTE,
                         RESPONSE_KEY_CURRENT_VOLUME, RESPONSE_KEY_RESULT,
                         SERVICE_AV_TRANSPORT, SERVICE_CONTENT_DIRECTORY,
-                        SERVICE_RENDERING_CONTROL)
+                        SERVICE_ID_SETUP_SERVICE, SERVICE_RENDERING_CONTROL)
 
 
 def exception_handler(function):
@@ -29,9 +29,15 @@ def exception_handler(function):
 async def get_dlna_action(location, service, action, http_headers=None):
     """Return DLNA action pased on passed parameters"""
     requester = AiohttpRequester(http_headers=http_headers)
-    factory = UpnpFactory(requester)
-    device = await factory.async_create_device(location)
-    service = device.service(service)
+    try:
+        factory = UpnpFactory(requester)
+        device = await factory.async_create_device(location)
+        service = device.service(service)
+    except:
+        exc_info = "%s%s" % (sys.exc_info()[0], sys.exc_info()[1])
+        name = function.__name__
+        log_error("Unexpected error with %s: %s" % (name, exc_info))
+
     action = service.action(action)
     return action
 
@@ -346,3 +352,48 @@ async def async_set_play_mode(location, play_mode, instance_id=0):
     action_name = "SetPlayMode"
     upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
     await upnp_action.async_call(InstanceID=instance_id, NewPlayMode=play_mode)
+
+
+@exception_handler
+async def async_get_update_info(location):
+    """Return software update information."""
+    action_name = "GetUpdateInfo"
+    upnp_action = await get_dlna_action(location, SERVICE_ID_SETUP_SERVICE, action_name)
+    response = await upnp_action.async_call()
+    return response
+
+
+@exception_handler
+async def async_get_info(location):
+    """Return softwre version."""
+    action_name = "GetInfo"
+    upnp_action = await get_dlna_action(location, SERVICE_ID_SETUP_SERVICE, action_name)
+    response = await upnp_action.async_call()
+    return response["SoftwareVersion"]
+
+
+@exception_handler
+async def async_get_device(location, service):
+    """Return unique device name."""
+    action_name = "GetDevice"
+    upnp_action = await get_dlna_action(location, SERVICE_ID_SETUP_SERVICE, action_name)
+    response = await upnp_action.async_call(Service=service)
+    return response["UniqueDeviceName"]
+
+
+@exception_handler
+async def async_get_manufacturer(location):
+    """Return manufacturer name."""
+    requester = AiohttpRequester()
+    factory = UpnpFactory(requester)
+    device = await factory.async_create_device(location)
+    return device.manufacturer
+
+
+@exception_handler
+async def async_get_model_name(location):
+    """Return model name."""
+    requester = AiohttpRequester()
+    factory = UpnpFactory(requester)
+    device = await factory.async_create_device(location)
+    return device.model_name
