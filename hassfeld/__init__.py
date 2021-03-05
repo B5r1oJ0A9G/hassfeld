@@ -418,7 +418,7 @@ class RaumfeldHost:
     def set_zone_room_volume(self, zone_room_lst, volume, room_lst=None):
         """Sets volume of rooms in a zone to same level."""
         return asyncio.run(
-            self.async_set_zone_room_volume(zone_room_lst, volume, room_lst=None)
+            self.async_set_zone_room_volume(zone_room_lst, volume, room_lst)
         )
 
     async def async_set_zone_room_volume(self, zone_room_lst, volume, room_lst=None):
@@ -448,7 +448,7 @@ class RaumfeldHost:
 
     def set_zone_mute(self, zone_room_lst, mute=True):
         """Mute zone."""
-        return asyncio.run(self.async_set_zone_mute(zone_room_lst, mute=True))
+        return asyncio.run(self.async_set_zone_mute(zone_room_lst, mute))
 
     async def async_set_zone_mute(self, zone_room_lst, mute=True):
         """Mute zone."""
@@ -576,12 +576,12 @@ class RaumfeldHost:
         """Search the media server."""
         return asyncio.run(
             self.async_search_media_server(
-                container_id=0,
-                search_criteria="",
-                filter_criteria="*",
-                starting_index=0,
-                requested_count=0,
-                sort_criteria="",
+                container_id,
+                search_criteria,
+                filter_criteria,
+                starting_index,
+                requested_count,
+                sort_criteria,
             )
         )
 
@@ -640,7 +640,7 @@ class RaumfeldHost:
         """Set the URI of the track to play and it's meta data in a zone."""
         return asyncio.run(
             self.async_set_av_transport_uri(
-                zone_room_lst, current_uri, current_uri_metadata=None
+                zone_room_lst, current_uri, current_uri_metadata
             )
         )
 
@@ -662,7 +662,7 @@ class RaumfeldHost:
         """Search for track and play first found."""
         return asyncio.run(
             self.async_search_and_zone_play(
-                zone_room_lst, search_criteria, container_id=CID_SEARCH_ALLTRACKS
+                zone_room_lst, search_criteria, container_id
             )
         )
 
@@ -758,7 +758,7 @@ class RaumfeldHost:
 
     def save_zone(self, zone_room_lst, repl_snap=False):
         """Create backup of media state for later restore."""
-        return asyncio.run(self.async_save_zone(zone_room_lst, repl_snap=False))
+        return asyncio.run(self.async_save_zone(zone_room_lst, repl_snap))
 
     async def async_save_zone(self, zone_room_lst, repl_snap=False):
         """Create backup of media state for later restore."""
@@ -777,7 +777,7 @@ class RaumfeldHost:
 
     def restore_zone(self, zone_room_lst, del_snap=True):
         """restore media state from previous snapshot."""
-        return asyncio.run(self.async_restore_zone(zone_room_lst, del_snap=True))
+        return asyncio.run(self.async_restore_zone(zone_room_lst, del_snap))
 
     async def async_restore_zone(self, zone_room_lst, del_snap=True):
         """restore media state from previous snapshot."""
