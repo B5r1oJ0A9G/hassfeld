@@ -65,7 +65,9 @@ async def async_get_media_info(location, instance_id=0):
     action_name = "GetMediaInfo"
     upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
     response = await upnp_action.async_call(InstanceID=instance_id)
-    response["CurrentURIMetaData"] = upnp_action.argument("CurrentURIMetaData").raw_upnp_value
+    response["CurrentURIMetaData"] = upnp_action.argument(
+        "CurrentURIMetaData"
+    ).raw_upnp_value
     return response
 
 
