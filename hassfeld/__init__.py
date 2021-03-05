@@ -11,7 +11,6 @@ import xmltodict
 
 from . import aioupnp
 from . import auxilliary as aux
-from . import upnp
 from . import webservice as ws
 from .common import log_critical, log_info, log_warn, logger
 from .constants import (BROWSE_CHILDREN, CID_SEARCH_ALLTRACKS,
@@ -548,22 +547,10 @@ class RaumfeldHost:
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         await aioupnp.async_previous_track(zone_loc)
 
-    # TODO: Should redirect to async_browse_media_server().
     def browse_media_server(self, object_id, browse_flag):
         """Browse media on the media server."""
-        http_headers = None
+        return asyncio.run(self.async_browse_media_server(object_id, browse_flag))
 
-        if browse_flag == BROWSE_CHILDREN:
-            if object_id in USER_AGENT_RAUMFELD_OIDS:
-                http_headers = {"User-Agent": USER_AGENT_RAUMFELD}
-
-        media_server_loc = self.resolve["udn_to_devloc"][self.media_server_udn]
-        return upnp.browse(
-            media_server_loc, object_id, browse_flag, http_headers=http_headers
-        )
-
-    # FIXME: Currently of little use due to lacking http_header support.
-    #        See: https://github.com/StevenLooman/async_upnp_client/issues/51
     async def async_browse_media_server(self, object_id, browse_flag):
         """Browse media on the media server."""
         http_headers = None
@@ -573,7 +560,7 @@ class RaumfeldHost:
                 http_headers = {"User-Agent": USER_AGENT_RAUMFELD}
 
         media_server_loc = self.resolve["udn_to_devloc"][self.media_server_udn]
-        return await aioupnp.browse(
+        return await aioupnp.async_browse(
             media_server_loc, object_id, browse_flag, http_headers=http_headers
         )
 
@@ -727,18 +714,10 @@ class RaumfeldHost:
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         return await aioupnp.async_get_volume(zone_loc)
 
-    # TODO: Should redirect to async_get_position_info().
     def get_position_info(self, zone_room_lst):
         """Get play information from zone."""
-        response = False
-        zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
-        if zone_udn is not None:
-            zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-            response = upnp.get_position_info(zone_loc)
-        return response
+        return asyncio.run(self.async_get_position_info(zone_room_lst))
 
-    # FIXME: Currently of limited use due to unescaping in async_upnp_client.
-    #        See https://github.com/StevenLooman/async_upnp_client/issues/50
     async def async_get_position_info(self, zone_room_lst):
         """Get play information from zone."""
         response = False
@@ -748,14 +727,10 @@ class RaumfeldHost:
             response = await aioupnp.async_get_position_info(zone_loc)
         return response
 
-    # TODO: Should redirect to async_get_zone_position().
     def get_zone_position(self, zone_room_lst):
         """Get play position from zone."""
-        position_info = self.get_position_info(zone_room_lst)
-        return position_info["AbsTime"]
+        return asyncio.run(self.async_get_zone_position(zone_room_lst))
 
-    # FIXME: Currently of limited use due to unescaping in async_upnp_client.
-    #        See https://github.com/StevenLooman/async_upnp_client/issues/50
     async def async_get_zone_position(self, zone_room_lst):
         """Get play position from zone."""
         position_info = await self.async_get_position_info(zone_room_lst)
@@ -781,15 +756,16 @@ class RaumfeldHost:
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         await aioupnp.async_set_play_mode(zone_loc, play_mode)
 
-    # FIXME: Currently of limited use due to unescaping in
-    #        async_get_position_info().
-    #        See https://github.com/StevenLooman/async_upnp_client/issues/50
     def save_zone(self, zone_room_lst, repl_snap=False):
         """Create backup of media state for later restore."""
-        media_info = asyncio.run(self.async_get_media_info(zone_room_lst))
-        position_info = self.get_position_info(zone_room_lst)
-        volume = asyncio.run(self.async_get_zone_volume(zone_room_lst))
-        mute = asyncio.run(self.async_get_zone_mute(zone_room_lst))
+        return asyncio.run(self.async_save_zone(zone_room_lst, repl_snap=False))
+
+    async def async_save_zone(self, zone_room_lst, repl_snap=False):
+        """Create backup of media state for later restore."""
+        media_info = await self.async_get_media_info(zone_room_lst)
+        position_info = await self.async_get_position_info(zone_room_lst)
+        volume = await self.async_get_zone_volume(zone_room_lst)
+        mute = await self.async_get_zone_mute(zone_room_lst)
         key = repr(zone_room_lst)
         if key not in self.snap or repl_snap:
             self.snap[key] = {}

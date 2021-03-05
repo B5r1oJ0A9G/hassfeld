@@ -1,9 +1,6 @@
 """Methods implementing UPnP requests."""
 import sys
-from typing import Mapping, Optional, Tuple, Union
 
-import aiohttp
-import async_timeout
 from async_upnp_client import UpnpFactory
 from async_upnp_client.aiohttp import AiohttpRequester
 
@@ -29,53 +26,9 @@ def exception_handler(function):
     return new_function
 
 
-# FIXME: make this work-around obsolete
-class CustomAiohttpRequester(AiohttpRequester):
-    """Just to overlay async_do_http_request with http_header support"""
-
-    def __init__(self, timeout: int = 5, http_headers=None) -> None:
-        """Initialize."""
-        self.http_headers = http_headers
-        super().__init__(timeout)
-
-    async def async_do_http_request(
-        self,
-        method: str,
-        url: str,
-        headers: Optional[Mapping[str, str]] = None,
-        body: Optional[str] = None,
-        body_type: str = "text",
-    ) -> Tuple[int, Mapping, Union[str, bytes, None]]:
-        """Do a HTTP request."""
-        # pylint: disable=too-many-arguments
-        if self.http_headers:
-            if headers:
-                headers = {**headers, **self.http_headers}
-            else:
-                headers = self.http_headers
-
-        async with async_timeout.timeout(self._timeout):
-            async with aiohttp.ClientSession() as session:
-                async with session.request(
-                    method, url, headers=headers, data=body
-                ) as response:
-                    status = response.status
-                    resp_headers: Mapping = response.headers or {}
-
-                    resp_body: Union[str, bytes, None] = None
-                    if body_type == "text":
-                        resp_body = await response.text()
-                    elif body_type == "raw":
-                        resp_body = await response.read()
-                    elif body_type == "ignore":
-                        resp_body = None
-
-        return status, resp_headers, resp_body
-
-
 async def get_dlna_action(location, service, action, http_headers=None):
     """Return DLNA action pased on passed parameters"""
-    requester = CustomAiohttpRequester(http_headers=http_headers)
+    requester = AiohttpRequester(http_headers=http_headers)
     factory = UpnpFactory(requester)
     device = await factory.async_create_device(location)
     service = device.service(service)
@@ -112,6 +65,7 @@ async def async_get_media_info(location, instance_id=0):
     action_name = "GetMediaInfo"
     upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
     response = await upnp_action.async_call(InstanceID=instance_id)
+    response["CurrentURIMetaData"] = upnp_action.argument("CurrentURIMetaData").raw_upnp_value
     return response
 
 
@@ -154,6 +108,7 @@ async def async_get_position_info(location, instance_id=0):
     action_name = "GetPositionInfo"
     upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
     response = await upnp_action.async_call(InstanceID=instance_id)
+    response["TrackMetaData"] = upnp_action.argument("TrackMetaData").raw_upnp_value
     return response
 
 
@@ -191,6 +146,9 @@ async def async_browse(
         SortCriteria=sort_criteria,
     )
     if RESPONSE_KEY_RESULT in response:
+        response[RESPONSE_KEY_RESULT] = upnp_action.argument(
+            RESPONSE_KEY_RESULT
+        ).raw_upnp_value
         return response[RESPONSE_KEY_RESULT]
     return None
 
