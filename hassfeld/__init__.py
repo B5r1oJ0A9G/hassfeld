@@ -244,7 +244,7 @@ class RaumfeldHost:
                 self.lists["rooms"].append(room_name)
                 if "renderer" in room:
                     if "@spotifyConnect" in room["renderer"]:
-                        if room["renderer"]["@spotifyConnect"] == "ACTIVE":
+                        if room["renderer"]["@spotifyConnect"] == "active":
                             renderer_udn = room["renderer"]["@udn"]
                             self.resolve["roomudn_to_rendudn"][room_udn] = renderer_udn
                             self.lists["spotify_renderer"].append(renderer_udn)
