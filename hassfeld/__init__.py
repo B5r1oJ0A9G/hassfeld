@@ -386,6 +386,13 @@ class RaumfeldHost:
         """Check whether passed room is valid."""
         return bool(room in self.lists["rooms"])
 
+    def rooms_are_valid(self, room_lst):
+        """Check whether passed rooms are valid."""
+        for room in room_lst:
+            if not self.room_is_valid(room):
+                return False
+        return True
+
     def location_is_valid(self, location):
         """Check whether passed location is valid."""
         return bool(location in self.lists["locations"])
