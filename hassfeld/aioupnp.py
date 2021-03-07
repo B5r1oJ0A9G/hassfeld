@@ -1,10 +1,11 @@
 """Methods implementing UPnP requests."""
+import asyncio
 import sys
 
 from async_upnp_client import UpnpFactory
 from async_upnp_client.aiohttp import AiohttpRequester
 
-from .common import log_error
+from .common import log_error, log_info
 from .constants import (BROWSE_CHILDREN, RESPONSE_KEY_CURRENT_MUTE,
                         RESPONSE_KEY_CURRENT_VOLUME, RESPONSE_KEY_RESULT,
                         SERVICE_AV_TRANSPORT, SERVICE_CONTENT_DIRECTORY,
@@ -14,13 +15,15 @@ from .constants import (BROWSE_CHILDREN, RESPONSE_KEY_CURRENT_MUTE,
 def exception_handler(function):
     """Handling exceptions as decorator."""
 
-    def new_function(*args, **kwargs):
+    async def new_function(*args, **kwargs):
+        name = function.__name__
         try:
-            result = function(*args, **kwargs)
+            result = await function(*args, **kwargs)
             return result
+        except asyncio.exceptions.TimeoutError:
+            log_info("Function '%s' timed out." % name)
         except:
             exc_info = "%s%s" % (sys.exc_info()[0], sys.exc_info()[1])
-            name = function.__name__
             log_error("Unexpected error with %s: %s" % (name, exc_info))
 
     return new_function
@@ -29,15 +32,9 @@ def exception_handler(function):
 async def get_dlna_action(location, service, action, http_headers=None):
     """Return DLNA action pased on passed parameters"""
     requester = AiohttpRequester(http_headers=http_headers)
-    try:
-        factory = UpnpFactory(requester)
-        device = await factory.async_create_device(location)
-        service = device.service(service)
-    except:
-        exc_info = "%s%s" % (sys.exc_info()[0], sys.exc_info()[1])
-        name = function.__name__
-        log_error("Unexpected error with %s: %s" % (name, exc_info))
-
+    factory = UpnpFactory(requester)
+    device = await factory.async_create_device(location)
+    service = device.service(service)
     action = service.action(action)
     return action
 
