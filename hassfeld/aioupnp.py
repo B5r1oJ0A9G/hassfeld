@@ -9,7 +9,8 @@ from .common import log_error, log_info
 from .constants import (BROWSE_CHILDREN, RESPONSE_KEY_CURRENT_MUTE,
                         RESPONSE_KEY_CURRENT_VOLUME, RESPONSE_KEY_RESULT,
                         SERVICE_AV_TRANSPORT, SERVICE_CONTENT_DIRECTORY,
-                        SERVICE_ID_SETUP_SERVICE, SERVICE_RENDERING_CONTROL)
+                        SERVICE_ID_SETUP_SERVICE, SERVICE_RENDERING_CONTROL,
+                        TIMEOUT_UPNP)
 
 
 def exception_handler(function):
@@ -31,7 +32,7 @@ def exception_handler(function):
 
 async def get_dlna_action(location, service, action, http_headers=None):
     """Return DLNA action pased on passed parameters"""
-    requester = AiohttpRequester(http_headers=http_headers)
+    requester = AiohttpRequester(timeout=TIMEOUT_UPNP, http_headers=http_headers)
     factory = UpnpFactory(requester)
     device = await factory.async_create_device(location)
     service = device.service(service)
