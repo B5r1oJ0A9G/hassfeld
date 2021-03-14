@@ -5,7 +5,7 @@ with open("README.rst", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="hassfeld",
-    version="0.3.2-alpha",
+    version="0.3.2-alpha2",
     description="Integration of Raumfeld into Home Assistant",
     long_description=long_description,
     long_description_content_type="text/x-rst",
@@ -19,7 +19,7 @@ setuptools.setup(
     python_requires='>=3.5',
     install_requires=[
         "aiohttp",
-        "async-upnp-client==0.15.0",
+        "async_upnp_client>=0.15.0",
         "requests",
         "xmltodict",
     ]
