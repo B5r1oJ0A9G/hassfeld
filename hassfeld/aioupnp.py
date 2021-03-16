@@ -1,81 +1,38 @@
 """Methods implementing UPnP requests."""
+import asyncio
 import sys
-from typing import Mapping, Optional, Tuple, Union
 
-import aiohttp
-import async_timeout
 from async_upnp_client import UpnpFactory
 from async_upnp_client.aiohttp import AiohttpRequester
 
-from .common import log_error
+from .common import log_error, log_info
 from .constants import (BROWSE_CHILDREN, RESPONSE_KEY_CURRENT_MUTE,
                         RESPONSE_KEY_CURRENT_VOLUME, RESPONSE_KEY_RESULT,
                         SERVICE_AV_TRANSPORT, SERVICE_CONTENT_DIRECTORY,
-                        SERVICE_RENDERING_CONTROL)
+                        SERVICE_ID_SETUP_SERVICE, SERVICE_RENDERING_CONTROL,
+                        SOUND_FAILURE, SOUND_SUCCESS, TIMEOUT_UPNP)
 
 
 def exception_handler(function):
     """Handling exceptions as decorator."""
 
-    def new_function(*args, **kwargs):
+    async def new_function(*args, **kwargs):
+        name = function.__name__
         try:
-            result = function(*args, **kwargs)
+            result = await function(*args, **kwargs)
             return result
+        except asyncio.exceptions.TimeoutError:
+            log_info("Function '%s' timed out." % name)
         except:
             exc_info = "%s%s" % (sys.exc_info()[0], sys.exc_info()[1])
-            name = function.__name__
             log_error("Unexpected error with %s: %s" % (name, exc_info))
 
     return new_function
 
 
-# FIXME: make this work-around obsolete
-class CustomAiohttpRequester(AiohttpRequester):
-    """Just to overlay async_do_http_request with http_header support"""
-
-    def __init__(self, timeout: int = 5, http_headers=None) -> None:
-        """Initialize."""
-        self.http_headers = http_headers
-        super().__init__(timeout)
-
-    async def async_do_http_request(
-        self,
-        method: str,
-        url: str,
-        headers: Optional[Mapping[str, str]] = None,
-        body: Optional[str] = None,
-        body_type: str = "text",
-    ) -> Tuple[int, Mapping, Union[str, bytes, None]]:
-        """Do a HTTP request."""
-        # pylint: disable=too-many-arguments
-        if self.http_headers:
-            if headers:
-                headers = {**headers, **self.http_headers}
-            else:
-                headers = self.http_headers
-
-        async with async_timeout.timeout(self._timeout):
-            async with aiohttp.ClientSession() as session:
-                async with session.request(
-                    method, url, headers=headers, data=body
-                ) as response:
-                    status = response.status
-                    resp_headers: Mapping = response.headers or {}
-
-                    resp_body: Union[str, bytes, None] = None
-                    if body_type == "text":
-                        resp_body = await response.text()
-                    elif body_type == "raw":
-                        resp_body = await response.read()
-                    elif body_type == "ignore":
-                        resp_body = None
-
-        return status, resp_headers, resp_body
-
-
 async def get_dlna_action(location, service, action, http_headers=None):
     """Return DLNA action pased on passed parameters"""
-    requester = CustomAiohttpRequester(http_headers=http_headers)
+    requester = AiohttpRequester(timeout=TIMEOUT_UPNP, http_headers=http_headers)
     factory = UpnpFactory(requester)
     device = await factory.async_create_device(location)
     service = device.service(service)
@@ -112,6 +69,9 @@ async def async_get_media_info(location, instance_id=0):
     action_name = "GetMediaInfo"
     upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
     response = await upnp_action.async_call(InstanceID=instance_id)
+    response["CurrentURIMetaData"] = upnp_action.argument(
+        "CurrentURIMetaData"
+    ).raw_upnp_value
     return response
 
 
@@ -154,6 +114,7 @@ async def async_get_position_info(location, instance_id=0):
     action_name = "GetPositionInfo"
     upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
     response = await upnp_action.async_call(InstanceID=instance_id)
+    response["TrackMetaData"] = upnp_action.argument("TrackMetaData").raw_upnp_value
     return response
 
 
@@ -191,6 +152,9 @@ async def async_browse(
         SortCriteria=sort_criteria,
     )
     if RESPONSE_KEY_RESULT in response:
+        response[RESPONSE_KEY_RESULT] = upnp_action.argument(
+            RESPONSE_KEY_RESULT
+        ).raw_upnp_value
         return response[RESPONSE_KEY_RESULT]
     return None
 
@@ -386,3 +350,73 @@ async def async_set_play_mode(location, play_mode, instance_id=0):
     action_name = "SetPlayMode"
     upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
     await upnp_action.async_call(InstanceID=instance_id, NewPlayMode=play_mode)
+
+
+@exception_handler
+async def async_get_update_info(location):
+    """Return software update information."""
+    action_name = "GetUpdateInfo"
+    upnp_action = await get_dlna_action(location, SERVICE_ID_SETUP_SERVICE, action_name)
+    response = await upnp_action.async_call()
+    return response
+
+
+@exception_handler
+async def async_get_info(location):
+    """Return softwre version."""
+    action_name = "GetInfo"
+    upnp_action = await get_dlna_action(location, SERVICE_ID_SETUP_SERVICE, action_name)
+    response = await upnp_action.async_call()
+    return response["SoftwareVersion"]
+
+
+@exception_handler
+async def async_get_device(location, service):
+    """Return unique device name."""
+    action_name = "GetDevice"
+    upnp_action = await get_dlna_action(location, SERVICE_ID_SETUP_SERVICE, action_name)
+    response = await upnp_action.async_call(Service=service)
+    return response["UniqueDeviceName"]
+
+
+@exception_handler
+async def async_get_manufacturer(location):
+    """Return manufacturer name."""
+    requester = AiohttpRequester()
+    factory = UpnpFactory(requester)
+    device = await factory.async_create_device(location)
+    return device.manufacturer
+
+
+@exception_handler
+async def async_get_model_name(location):
+    """Return model name."""
+    requester = AiohttpRequester()
+    factory = UpnpFactory(requester)
+    device = await factory.async_create_device(location)
+    return device.model_name
+
+
+@exception_handler
+async def async_play_system_sound(location, sound=SOUND_SUCCESS, instance_id=0):
+    """Plays a one out of two available system sounds.
+
+    Devices have to be online. The sound gets mixed into potentially played
+    media.
+
+    Applies to:
+    Digital Media Player
+
+    Parameters:
+    location -- URL to the device description XML of the rendering device.
+    sound -- Valid values are "Success" and "Failure".
+    instance_id --
+    """
+    if sound != SOUND_SUCCESS:
+        sound = SOUND_FAILURE
+
+    action_name = "PlaySystemSound"
+    upnp_action = await get_dlna_action(
+        location, SERVICE_RENDERING_CONTROL, action_name
+    )
+    await upnp_action.async_call(InstanceID=instance_id, Sound=sound)
