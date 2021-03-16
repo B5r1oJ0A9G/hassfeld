@@ -17,7 +17,7 @@ from .constants import (BROWSE_CHILDREN, CID_SEARCH_ALLTRACKS,
                         DEFAULT_PORT_WEBSERVICE, DELAY_FAST_UPDATE_CHECKS,
                         DELAY_REQUEST_FAILURE_LONG_POLLING, MAX_RETRIES,
                         PREFERRED_TIMEOUT_LONG_POLLING, REQUIRED_METADATA,
-                        SOUND_SUCCESS, TIMEOUT_LONG_POLLING,
+                        SOUND_SUCCESS, SPOTIFY_ACTIVE, TIMEOUT_LONG_POLLING,
                         TIMEOUT_WEBSERVICE_ACTION,
                         TRANSPORT_STATE_TRANSITIONING, TRIGGER_UPDATE_DEVICES,
                         TRIGGER_UPDATE_HOST_INFO, TRIGGER_UPDATE_SYSTEM_STATE,
@@ -208,6 +208,7 @@ class RaumfeldHost:
                 for room_itm in zone_itm["room"]:
                     room_name = room_itm["@name"]
                     room_udn = room_itm["@udn"]
+                    renderer_udn = room_itm["renderer"]["@udn"]
                     zone_rooms.append(room_name)
                     self.lists["rooms"].append(room_name)
                     if "@powerState" in room_itm:
@@ -223,6 +224,7 @@ class RaumfeldHost:
                     self.resolve["room_to_udn"][room_name] = room_udn
                     self.resolve["udn_to_room"][room_udn] = room_name
                     self.resolve["zoneudn_to_roomudnlst"][zone_udn].append(room_udn)
+                    self.resolve["roomudn_to_rendudn"][room_udn] = renderer_udn
 
                 self.lists["zones"].append(sorted(zone_rooms))
 
@@ -230,6 +232,7 @@ class RaumfeldHost:
             for room in self.wsd["zone_config"]["unassignedRooms"]["room"]:
                 room_name = room["@name"]
                 room_udn = room["@udn"]
+                renderer_udn = room["renderer"]["@udn"]
                 if "@powerState" in room:
                     self.resolve["roomudn_to_powerstate"][room_udn] = room[
                         "@powerState"
@@ -242,12 +245,10 @@ class RaumfeldHost:
                 self.resolve["room_to_udn"][room_name] = room_udn
                 self.resolve["udn_to_room"][room_udn] = room_name
                 self.lists["rooms"].append(room_name)
-                if "renderer" in room:
-                    if "@spotifyConnect" in room["renderer"]:
-                        if room["renderer"]["@spotifyConnect"] == "active":
-                            renderer_udn = room["renderer"]["@udn"]
-                            self.resolve["roomudn_to_rendudn"][room_udn] = renderer_udn
-                            self.lists["spotify_renderer"].append(renderer_udn)
+                self.resolve["roomudn_to_rendudn"][room_udn] = renderer_udn
+                if "@spotifyConnect" in room["renderer"]:
+                    if room["renderer"]["@spotifyConnect"] == SPOTIFY_ACTIVE:
+                        self.lists["spotify_renderer"].append(renderer_udn)
 
         self.init_done["zone_config"] = True
 
@@ -789,7 +790,7 @@ class RaumfeldHost:
         room_udn = self.resolve["room_to_udn"][room]
         rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
         rend_loc = self.resolve["udn_to_devloc"][rend_udn]
-        await aioupnp.async_play_system_sound(room_loc, sound)
+        await aioupnp.async_play_system_sound(rend_loc, sound)
 
     def save_zone(self, zone_room_lst, repl_snap=False):
         """Create backup of media state for later restore."""
@@ -888,4 +889,3 @@ class RaumfeldHost:
         rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
         rend_loc = self.resolve["udn_to_devloc"][rend_udn]
         return await aioupnp.async_get_transport_info(rend_loc)
-
