@@ -10,7 +10,7 @@ from .constants import (BROWSE_CHILDREN, RESPONSE_KEY_CURRENT_MUTE,
                         RESPONSE_KEY_CURRENT_VOLUME, RESPONSE_KEY_RESULT,
                         SERVICE_AV_TRANSPORT, SERVICE_CONTENT_DIRECTORY,
                         SERVICE_ID_SETUP_SERVICE, SERVICE_RENDERING_CONTROL,
-                        TIMEOUT_UPNP)
+                        SOUND_FAILURE, SOUND_SUCCESS, TIMEOUT_UPNP)
 
 
 def exception_handler(function):
@@ -395,3 +395,28 @@ async def async_get_model_name(location):
     factory = UpnpFactory(requester)
     device = await factory.async_create_device(location)
     return device.model_name
+
+
+@exception_handler
+async def async_play_system_sound(location, sound=SOUND_SUCCESS, instance_id=0):
+    """Plays a one out of two available system sounds.
+
+    Devices have to be online. The sound gets mixed into potentially played
+    media.
+
+    Applies to:
+    Digital Media Player
+
+    Parameters:
+    location -- URL to the device description XML of the rendering device.
+    sound -- Valid values are "Success" and "Failure".
+    instance_id --
+    """
+    if sound != SOUND_SUCCESS:
+        sound = SOUND_FAILURE
+
+    action_name = "PlaySystemSound"
+    upnp_action = await get_dlna_action(
+        location, SERVICE_RENDERING_CONTROL, action_name
+    )
+    await upnp_action.async_call(InstanceID=instance_id, Sound=sound)

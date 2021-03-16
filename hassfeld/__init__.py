@@ -17,7 +17,8 @@ from .constants import (BROWSE_CHILDREN, CID_SEARCH_ALLTRACKS,
                         DEFAULT_PORT_WEBSERVICE, DELAY_FAST_UPDATE_CHECKS,
                         DELAY_REQUEST_FAILURE_LONG_POLLING, MAX_RETRIES,
                         PREFERRED_TIMEOUT_LONG_POLLING, REQUIRED_METADATA,
-                        TIMEOUT_LONG_POLLING, TIMEOUT_WEBSERVICE_ACTION,
+                        SOUND_SUCCESS, TIMEOUT_LONG_POLLING,
+                        TIMEOUT_WEBSERVICE_ACTION,
                         TRANSPORT_STATE_TRANSITIONING, TRIGGER_UPDATE_DEVICES,
                         TRIGGER_UPDATE_HOST_INFO, TRIGGER_UPDATE_SYSTEM_STATE,
                         TRIGGER_UPDATE_ZONE_CONFIG, TYPE_MEDIA_SERVER,
@@ -762,6 +763,17 @@ class RaumfeldHost:
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         await aioupnp.async_set_play_mode(zone_loc, play_mode)
+
+    def room_play_system_sound(self, room, sound=SOUND_SUCCESS):
+        """Play system sound on a room."""
+        return asyncio.run(self.async_room_play_system_sound(room, sound))
+
+    async def async_room_play_system_sound(self, room, sound=SOUND_SUCCESS):
+        """Play system sound on a room."""
+        room_udn = self.resolve["room_to_udn"][room]
+        rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
+        rend_loc = self.resolve["udn_to_devloc"][rend_udn]
+        await aioupnp.async_play_system_sound(room_loc, sound)
 
     def save_zone(self, zone_room_lst, repl_snap=False):
         """Create backup of media state for later restore."""
