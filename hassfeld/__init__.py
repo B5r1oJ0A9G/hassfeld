@@ -833,7 +833,7 @@ class RaumfeldHost:
                 transport_state = transport_info["CurrentTransportState"]
                 if transport_state != TRANSPORT_STATE_TRANSITIONING:
                     break
-                sleep(DELAY_FAST_UPDATE_CHECKS)
+                await asyncio.sleep(DELAY_FAST_UPDATE_CHECKS)
                 retries += 1
             await self.async_zone_seek(zone_room_lst, abs_time)
             await self.async_set_zone_volume(zone_room_lst, volume)
