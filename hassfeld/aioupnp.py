@@ -3,7 +3,7 @@ import asyncio
 import sys
 
 from async_upnp_client import UpnpFactory
-from async_upnp_client.aiohttp import AiohttpRequester
+from async_upnp_client.aiohttp import AiohttpRequester, AiohttpSessionRequester
 
 from .common import log_error, log_info
 from .constants import (BROWSE_CHILDREN, RESPONSE_KEY_CURRENT_MUTE,
@@ -30,9 +30,15 @@ def exception_handler(function):
     return new_function
 
 
-async def get_dlna_action(location, service, action, http_headers=None):
+async def get_dlna_action(location, service, action, http_headers=None, session=None):
     """Return DLNA action pased on passed parameters"""
-    requester = AiohttpRequester(timeout=TIMEOUT_UPNP, http_headers=http_headers)
+    if session:
+        requester = AiohttpSessionRequester(
+            timeout=TIMEOUT_UPNP, http_headers=http_headers, session=session
+        )
+    else:
+        requester = AiohttpRequester(timeout=TIMEOUT_UPNP, http_headers=http_headers)
+
     factory = UpnpFactory(requester)
     device = await factory.async_create_device(location)
     service = device.service(service)
@@ -41,7 +47,7 @@ async def get_dlna_action(location, service, action, http_headers=None):
 
 
 @exception_handler
-async def async_get_mute(location, channel="Master", instance_id=0):
+async def async_get_mute(session, location, channel="Master", instance_id=0):
     """Returns a bolean of the mute status of a rendering service.
 
     Applies to:
@@ -55,7 +61,7 @@ async def async_get_mute(location, channel="Master", instance_id=0):
     """
     action_name = "GetMute"
     upnp_action = await get_dlna_action(
-        location, SERVICE_RENDERING_CONTROL, action_name
+        location, SERVICE_RENDERING_CONTROL, action_name, session=session
     )
     response = await upnp_action.async_call(InstanceID=instance_id, Channel=channel)
     if RESPONSE_KEY_CURRENT_MUTE in response:
@@ -64,10 +70,12 @@ async def async_get_mute(location, channel="Master", instance_id=0):
 
 
 @exception_handler
-async def async_get_media_info(location, instance_id=0):
+async def async_get_media_info(session, location, instance_id=0):
     """Return media information."""
     action_name = "GetMediaInfo"
-    upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
+    upnp_action = await get_dlna_action(
+        location, SERVICE_AV_TRANSPORT, action_name, session=session
+    )
     response = await upnp_action.async_call(InstanceID=instance_id)
     response["CurrentURIMetaData"] = upnp_action.argument(
         "CurrentURIMetaData"
@@ -76,16 +84,18 @@ async def async_get_media_info(location, instance_id=0):
 
 
 @exception_handler
-async def async_get_transport_info(location, instance_id=0):
+async def async_get_transport_info(session, location, instance_id=0):
     """Return transport information."""
     action_name = "GetTransportInfo"
-    upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
+    upnp_action = await get_dlna_action(
+        location, SERVICE_AV_TRANSPORT, action_name, session=session
+    )
     response = await upnp_action.async_call(InstanceID=instance_id)
     return response
 
 
 @exception_handler
-async def async_get_volume(location, channel="Master", instance_id=0):
+async def async_get_volume(session, location, channel="Master", instance_id=0):
     """Returns the highest volume of rooms in a zone rendering service.
 
     Applies to:
@@ -100,7 +110,7 @@ async def async_get_volume(location, channel="Master", instance_id=0):
     """
     action_name = "GetVolume"
     upnp_action = await get_dlna_action(
-        location, SERVICE_RENDERING_CONTROL, action_name
+        location, SERVICE_RENDERING_CONTROL, action_name, session=session
     )
     response = await upnp_action.async_call(InstanceID=instance_id, Channel=channel)
     if RESPONSE_KEY_CURRENT_VOLUME in response:
@@ -109,26 +119,31 @@ async def async_get_volume(location, channel="Master", instance_id=0):
 
 
 @exception_handler
-async def async_get_position_info(location, instance_id=0):
+async def async_get_position_info(session, location, instance_id=0):
     """Return position information."""
     action_name = "GetPositionInfo"
-    upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
+    upnp_action = await get_dlna_action(
+        location, SERVICE_AV_TRANSPORT, action_name, session=session
+    )
     response = await upnp_action.async_call(InstanceID=instance_id)
     response["TrackMetaData"] = upnp_action.argument("TrackMetaData").raw_upnp_value
     return response
 
 
 @exception_handler
-async def async_get_transport_settings(location, instance_id=0):
+async def async_get_transport_settings(session, location, instance_id=0):
     """Return transport settings."""
     action_name = "GetTransportSettings"
-    upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
+    upnp_action = await get_dlna_action(
+        location, SERVICE_AV_TRANSPORT, action_name, session=session
+    )
     response = await upnp_action.async_call(InstanceID=instance_id)
     return response
 
 
 @exception_handler
 async def async_browse(
+    session,
     location,
     object_id=0,
     browse_flag=BROWSE_CHILDREN,
@@ -141,7 +156,11 @@ async def async_browse(
     """Browse media."""
     action_name = "Browse"
     upnp_action = await get_dlna_action(
-        location, SERVICE_CONTENT_DIRECTORY, action_name, http_headers=http_headers
+        location,
+        SERVICE_CONTENT_DIRECTORY,
+        action_name,
+        http_headers=http_headers,
+        session=session,
     )
     response = await upnp_action.async_call(
         ObjectID=object_id,
@@ -161,6 +180,7 @@ async def async_browse(
 
 @exception_handler
 async def async_search(
+    session,
     location,
     container_id=0,
     search_criteria="",
@@ -172,7 +192,7 @@ async def async_search(
     """Search media."""
     action_name = "Search"
     upnp_action = await get_dlna_action(
-        location, SERVICE_CONTENT_DIRECTORY, action_name
+        location, SERVICE_CONTENT_DIRECTORY, action_name, session=session
     )
     response = await upnp_action.async_call(
         ContainerID=container_id,
@@ -188,7 +208,7 @@ async def async_search(
 
 
 @exception_handler
-async def async_set_room_volume(location, room, desired_volume, instance_id=0):
+async def async_set_room_volume(session, location, room, desired_volume, instance_id=0):
     """Sets the volume of a rendering service in a room.
 
     Applies to Virtual Media Player.
@@ -203,7 +223,7 @@ async def async_set_room_volume(location, room, desired_volume, instance_id=0):
     """
     action_name = "SetRoomVolume"
     upnp_action = await get_dlna_action(
-        location, SERVICE_RENDERING_CONTROL, action_name
+        location, SERVICE_RENDERING_CONTROL, action_name, session=session
     )
     await upnp_action.async_call(
         InstanceID=instance_id, Room=room, DesiredVolume=desired_volume
@@ -211,6 +231,7 @@ async def async_set_room_volume(location, room, desired_volume, instance_id=0):
 
 
 async def async_set_mute(
+    session,
     location,
     desired_mute=True,
     channel="Master",
@@ -231,7 +252,7 @@ async def async_set_mute(
     """
     action_name = "SetMute"
     upnp_action = await get_dlna_action(
-        location, SERVICE_RENDERING_CONTROL, action_name
+        location, SERVICE_RENDERING_CONTROL, action_name, session=session
     )
     await upnp_action.async_call(
         InstanceID=instance_id, Channel=channel, DesiredMute=desired_mute
@@ -239,7 +260,9 @@ async def async_set_mute(
 
 
 @exception_handler
-async def async_set_volume(location, desired_volume, channel="Master", instance_id=0):
+async def async_set_volume(
+    session, location, desired_volume, channel="Master", instance_id=0
+):
     """Returns the highest volume of rooms in a zone rendering service.
 
     Applies to:
@@ -255,14 +278,14 @@ async def async_set_volume(location, desired_volume, channel="Master", instance_
     """
     action_name = "SetVolume"
     upnp_action = await get_dlna_action(
-        location, SERVICE_RENDERING_CONTROL, action_name
+        location, SERVICE_RENDERING_CONTROL, action_name, session=session
     )
     await upnp_action.async_call(
         InstanceID=instance_id, Channel=channel, DesiredVolume=desired_volume
     )
 
 
-async def async_change_volume(location, amount, instance_id=0):
+async def async_change_volume(session, location, amount, instance_id=0):
     """Changes the volume of all rooms in a zone up or down.
 
     Applies to:
@@ -276,67 +299,81 @@ async def async_change_volume(location, amount, instance_id=0):
     """
     action_name = "ChangeVolume"
     upnp_action = await get_dlna_action(
-        location, SERVICE_RENDERING_CONTROL, action_name
+        location, SERVICE_RENDERING_CONTROL, action_name, session=session
     )
     await upnp_action.async_call(InstanceID=instance_id, Amount=amount)
 
 
 @exception_handler
-async def async_stop(location, instance_id=0):
+async def async_stop(session, location, instance_id=0):
     """Stop playing media."""
     action_name = "Stop"
-    upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
+    upnp_action = await get_dlna_action(
+        location, SERVICE_AV_TRANSPORT, action_name, session=session
+    )
     await upnp_action.async_call(InstanceID=instance_id)
 
 
 @exception_handler
-async def async_play(location, speed="1", instance_id=0):
+async def async_play(session, location, speed="1", instance_id=0):
     """Play media."""
     action_name = "Play"
-    upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
+    upnp_action = await get_dlna_action(
+        location, SERVICE_AV_TRANSPORT, action_name, session=session
+    )
     await upnp_action.async_call(InstanceID=instance_id, Speed=speed)
 
 
 @exception_handler
-async def async_pause(location, instance_id=0):
+async def async_pause(session, location, instance_id=0):
     """Paus playing media."""
     action_name = "Pause"
-    upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
+    upnp_action = await get_dlna_action(
+        location, SERVICE_AV_TRANSPORT, action_name, session=session
+    )
     await upnp_action.async_call(InstanceID=instance_id)
 
 
 # TODO: default to unit="ABS_TIME"
 @exception_handler
-async def async_seek(location, unit, target, instance_id=0):
+async def async_seek(session, location, unit, target, instance_id=0):
     """Seek to position."""
     action_name = "Seek"
-    upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
+    upnp_action = await get_dlna_action(
+        location, SERVICE_AV_TRANSPORT, action_name, session=session
+    )
     await upnp_action.async_call(InstanceID=instance_id, Unit=unit, Target=target)
 
 
 @exception_handler
-async def async_next_track(location, instance_id=0):
+async def async_next_track(session, location, instance_id=0):
     """Play next track."""
     action_name = "Next"
-    upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
+    upnp_action = await get_dlna_action(
+        location, SERVICE_AV_TRANSPORT, action_name, session=session
+    )
     await upnp_action.async_call(InstanceID=instance_id)
 
 
 @exception_handler
-async def async_previous_track(location, instance_id=0):
+async def async_previous_track(session, location, instance_id=0):
     """Play previous track."""
     action_name = "Previous"
-    upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
+    upnp_action = await get_dlna_action(
+        location, SERVICE_AV_TRANSPORT, action_name, session=session
+    )
     await upnp_action.async_call(InstanceID=instance_id)
 
 
 @exception_handler
 async def async_set_av_transport_uri(
-    location, current_uri, current_uri_meta_data="", instance_id=0
+    session, location, current_uri, current_uri_meta_data="", instance_id=0
 ):
     """Set media to play."""
     action_name = "SetAVTransportURI"
-    upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
+    upnp_action = await get_dlna_action(
+        location, SERVICE_AV_TRANSPORT, action_name, session=session
+    )
     await upnp_action.async_call(
         InstanceID=instance_id,
         CurrentURI=current_uri,
@@ -345,60 +382,70 @@ async def async_set_av_transport_uri(
 
 
 @exception_handler
-async def async_set_play_mode(location, play_mode, instance_id=0):
+async def async_set_play_mode(session, location, play_mode, instance_id=0):
     """Set play mode."""
     action_name = "SetPlayMode"
-    upnp_action = await get_dlna_action(location, SERVICE_AV_TRANSPORT, action_name)
+    upnp_action = await get_dlna_action(
+        location, SERVICE_AV_TRANSPORT, action_name, session=session
+    )
     await upnp_action.async_call(InstanceID=instance_id, NewPlayMode=play_mode)
 
 
 @exception_handler
-async def async_get_update_info(location):
+async def async_get_update_info(session, location):
     """Return software update information."""
     action_name = "GetUpdateInfo"
-    upnp_action = await get_dlna_action(location, SERVICE_ID_SETUP_SERVICE, action_name)
+    upnp_action = await get_dlna_action(
+        location, SERVICE_ID_SETUP_SERVICE, action_name, session=session
+    )
     response = await upnp_action.async_call()
     return response
 
 
 @exception_handler
-async def async_get_info(location):
+async def async_get_info(session, location):
     """Return softwre version."""
     action_name = "GetInfo"
-    upnp_action = await get_dlna_action(location, SERVICE_ID_SETUP_SERVICE, action_name)
+    upnp_action = await get_dlna_action(
+        location, SERVICE_ID_SETUP_SERVICE, action_name, session=session
+    )
     response = await upnp_action.async_call()
     return response["SoftwareVersion"]
 
 
 @exception_handler
-async def async_get_device(location, service):
+async def async_get_device(session, location, service):
     """Return unique device name."""
     action_name = "GetDevice"
-    upnp_action = await get_dlna_action(location, SERVICE_ID_SETUP_SERVICE, action_name)
+    upnp_action = await get_dlna_action(
+        location, SERVICE_ID_SETUP_SERVICE, action_name, session=session
+    )
     response = await upnp_action.async_call(Service=service)
     return response["UniqueDeviceName"]
 
 
 @exception_handler
-async def async_get_manufacturer(location):
+async def async_get_manufacturer(session, location):
     """Return manufacturer name."""
-    requester = AiohttpRequester()
+    requester = AiohttpSessionRequester(timeout=TIMEOUT_UPNP, session=session)
     factory = UpnpFactory(requester)
     device = await factory.async_create_device(location)
     return device.manufacturer
 
 
 @exception_handler
-async def async_get_model_name(location):
+async def async_get_model_name(session, location):
     """Return model name."""
-    requester = AiohttpRequester()
+    requester = AiohttpSessionRequester(timeout=TIMEOUT_UPNP, session=session)
     factory = UpnpFactory(requester)
     device = await factory.async_create_device(location)
     return device.model_name
 
 
 @exception_handler
-async def async_play_system_sound(location, sound=SOUND_SUCCESS, instance_id=0):
+async def async_play_system_sound(
+    session, location, sound=SOUND_SUCCESS, instance_id=0
+):
     """Plays a one out of two available system sounds.
 
     Devices have to be online. The sound gets mixed into potentially played
@@ -417,6 +464,6 @@ async def async_play_system_sound(location, sound=SOUND_SUCCESS, instance_id=0):
 
     action_name = "PlaySystemSound"
     upnp_action = await get_dlna_action(
-        location, SERVICE_RENDERING_CONTROL, action_name
+        location, SERVICE_RENDERING_CONTROL, action_name, session=session
     )
     await upnp_action.async_call(InstanceID=instance_id, Sound=sound)
