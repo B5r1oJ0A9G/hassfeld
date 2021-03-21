@@ -160,7 +160,9 @@ class RaumfeldHost:
             if update_id:
                 headers["updateID"] = update_id
             try:
-                async with session.get(url, headers=headers, timeout=timeout) as response:
+                async with session.get(
+                    url, headers=headers, timeout=timeout
+                ) as response:
                     if response.status == 200:
                         update_id = response.headers["updateID"]
                         _callback(await response.read())
@@ -374,17 +376,17 @@ class RaumfeldHost:
                     break
         return match
 
-    def __wait_zone_creation(self, old_zone_udn, new_zone_room_lst):
+    async def __async_wait_zone_creation(self, old_zone_udn, new_zone_room_lst):
         """Wait for zone creation published and recevied."""
         max_attempts = int(TIMEOUT_WEBSERVICE_ACTION / DELAY_FAST_UPDATE_CHECKS)
         for i in range(0, max_attempts):
             new_zone_udn = self.roomudnlst_to_zoneudn(new_zone_room_lst)
             if new_zone_udn is None:
-                sleep(DELAY_FAST_UPDATE_CHECKS)
+                await asyncio.sleep(DELAY_FAST_UPDATE_CHECKS)
             elif new_zone_udn == old_zone_udn:
-                sleep(DELAY_FAST_UPDATE_CHECKS)
+                await asyncio.sleep(DELAY_FAST_UPDATE_CHECKS)
             elif new_zone_udn not in self.resolve["udn_to_devloc"]:
-                sleep(DELAY_FAST_UPDATE_CHECKS)
+                await asyncio.sleep(DELAY_FAST_UPDATE_CHECKS)
             else:
                 break
 
@@ -429,7 +431,7 @@ class RaumfeldHost:
     # Raumfeld manipulation methods
     #
 
-    def create_zone(self, room_lst):
+    async def async_create_zone(self, room_lst):
         """Create a new zone based on list of rooms.
 
         Parameters:
@@ -437,9 +439,11 @@ class RaumfeldHost:
         """
         udn_lst = self.roomlst_to_udnlst(room_lst)
         old_zone_udn = self.roomudnlst_to_zoneudn(udn_lst)
-        ws.connect_rooms_to_zone(self.location, room_udns=udn_lst)
+        await ws.async_connect_rooms_to_zone(
+            self._aiohttp_session, self.location, room_udns=udn_lst
+        )
         # Zone creation may take some time before taking effect.
-        self.__wait_zone_creation(old_zone_udn, room_lst)
+        await self.__async_wait_zone_creation(old_zone_udn, room_lst)
 
     def set_zone_room_volume(self, zone_room_lst, volume, room_lst=None):
         """Sets volume of rooms in a zone to same level."""
@@ -854,20 +858,24 @@ class RaumfeldHost:
             if del_snap:
                 self.snap.pop(key, None)
 
-    def enter_automatic_standby(self, room):
+    async def async_enter_automatic_standby(self, room):
         """Put room speakers into automatic stand-by."""
         room_udn = self.resolve["room_to_udn"][room]
-        ws.enter_automatic_standby(self.location, room_udn)
+        await ws.async_enter_automatic_standby(
+            self._aiohttp_session, self.location, room_udn
+        )
 
-    def enter_manual_standby(self, room):
+    async def async_enter_manual_standby(self, room):
         """Put room speakers into manual stand-by (turn off)."""
         room_udn = self.resolve["room_to_udn"][room]
-        ws.enter_manual_standby(self.location, room_udn)
+        await ws.async_enter_manual_standby(
+            self._aiohttp_session, self.location, room_udn
+        )
 
-    def leave_standby(self, room):
+    async def async_leave_standby(self, room):
         """Weak room speakers up from stand-by."""
         room_udn = self.resolve["room_to_udn"][room]
-        ws.leave_standby(self.location, room_udn)
+        await ws.async_leave_standby(self._aiohttp_session, self.location, room_udn)
 
     # Spotify single-room methods
 
