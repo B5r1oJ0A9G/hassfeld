@@ -9,8 +9,8 @@ import aiohttp
 import requests
 import xmltodict
 
-from . import aioupnp
 from . import auxilliary as aux
+from . import upnp
 from . import webservice as ws
 from .common import log_critical, log_info, log_warn, logger
 from .constants import (BROWSE_CHILDREN, CID_SEARCH_ALLTRACKS,
@@ -472,7 +472,7 @@ class RaumfeldHost:
         if zone_udn:
             for room_udn in room_udnlst:
                 zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-                await aioupnp.async_set_room_volume(
+                await upnp.async_set_room_volume(
                     self._aiohttp_session, zone_loc, room_udn, volume, instance_id=0
                 )
 
@@ -484,7 +484,7 @@ class RaumfeldHost:
         """Mute zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        await aioupnp.async_set_mute(self._aiohttp_session, zone_loc, mute)
+        await upnp.async_set_mute(self._aiohttp_session, zone_loc, mute)
 
     def get_zone_mute(self, zone_room_lst):
         """Get mute status of zone."""
@@ -494,7 +494,7 @@ class RaumfeldHost:
         """Get mute status of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        mute = await aioupnp.async_get_mute(self._aiohttp_session, zone_loc)
+        mute = await upnp.async_get_mute(self._aiohttp_session, zone_loc)
         return mute
 
     def set_zone_volume(self, zone_room_lst, volume):
@@ -505,7 +505,7 @@ class RaumfeldHost:
         """Set volume to absolute level."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        await aioupnp.async_set_volume(self._aiohttp_session, zone_loc, volume)
+        await upnp.async_set_volume(self._aiohttp_session, zone_loc, volume)
 
     def change_zone_volume(self, zone_room_lst, amount):
         """Change the volume of zone up or down."""
@@ -515,7 +515,7 @@ class RaumfeldHost:
         """Change the volume of zone up or down."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        await aioupnp.async_change_volume(self._aiohttp_session, zone_loc, amount)
+        await upnp.async_change_volume(self._aiohttp_session, zone_loc, amount)
 
     def zone_stop(self, zone_room_lst):
         """Stop playing media on zone."""
@@ -525,7 +525,7 @@ class RaumfeldHost:
         """Stop playing media on zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        await aioupnp.async_stop(self._aiohttp_session, zone_loc)
+        await upnp.async_stop(self._aiohttp_session, zone_loc)
 
     def zone_play(self, zone_room_lst):
         """Play media on zone."""
@@ -535,7 +535,7 @@ class RaumfeldHost:
         """Play media on zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        await aioupnp.async_play(self._aiohttp_session, zone_loc)
+        await upnp.async_play(self._aiohttp_session, zone_loc)
 
     def zone_pause(self, zone_room_lst):
         """Pause playing media on zone."""
@@ -545,7 +545,7 @@ class RaumfeldHost:
         """Pause playing media on zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        await aioupnp.async_pause(self._aiohttp_session, zone_loc)
+        await upnp.async_pause(self._aiohttp_session, zone_loc)
 
     def zone_seek(self, zone_room_lst, target):
         """Seek to position on zone."""
@@ -555,7 +555,7 @@ class RaumfeldHost:
         """Seek to position on zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        await aioupnp.async_seek(self._aiohttp_session, zone_loc, "ABS_TIME", target)
+        await upnp.async_seek(self._aiohttp_session, zone_loc, "ABS_TIME", target)
 
     def zone_next_track(self, zone_room_lst):
         """Play next track of zone."""
@@ -565,7 +565,7 @@ class RaumfeldHost:
         """Play next track of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        await aioupnp.async_next_track(self._aiohttp_session, zone_loc)
+        await upnp.async_next_track(self._aiohttp_session, zone_loc)
 
     def zone_previous_track(self, zone_room_lst):
         """Play previous track of zone."""
@@ -575,7 +575,7 @@ class RaumfeldHost:
         """Play previous track of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        await aioupnp.async_previous_track(self._aiohttp_session, zone_loc)
+        await upnp.async_previous_track(self._aiohttp_session, zone_loc)
 
     def browse_media_server(self, object_id, browse_flag):
         """Browse media on the media server."""
@@ -590,7 +590,7 @@ class RaumfeldHost:
                 http_headers = {"User-Agent": USER_AGENT_RAUMFELD}
 
         media_server_loc = self.resolve["udn_to_devloc"][self.media_server_udn]
-        return await aioupnp.async_browse(
+        return await upnp.async_browse(
             self._aiohttp_session,
             media_server_loc,
             object_id,
@@ -634,7 +634,7 @@ class RaumfeldHost:
         search_criteria='raumfeld:any contains "No son of mine"
         """
         media_server_loc = self.resolve["udn_to_devloc"][self.media_server_udn]
-        response = await aioupnp.async_search(
+        response = await upnp.async_search(
             self._aiohttp_session,
             media_server_loc,
             container_id,
@@ -687,7 +687,7 @@ class RaumfeldHost:
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
         if current_uri_metadata is None:
             current_uri_metadata = xmltodict.unparse(REQUIRED_METADATA)
-        await aioupnp.async_set_av_transport_uri(
+        await upnp.async_set_av_transport_uri(
             self._aiohttp_session,
             zone_loc,
             current_uri,
@@ -722,7 +722,7 @@ class RaumfeldHost:
         """Get media information of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        return await aioupnp.async_get_media_info(self._aiohttp_session, zone_loc)
+        return await upnp.async_get_media_info(self._aiohttp_session, zone_loc)
 
     def get_play_mode(self, zone_room_lst):
         """Get play mode of zone."""
@@ -741,7 +741,7 @@ class RaumfeldHost:
         """Get transport information of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        return await aioupnp.async_get_transport_info(self._aiohttp_session, zone_loc)
+        return await upnp.async_get_transport_info(self._aiohttp_session, zone_loc)
 
     def get_zone_volume(self, zone_room_lst):
         """Get volume of zone."""
@@ -751,7 +751,7 @@ class RaumfeldHost:
         """Get volume of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        return await aioupnp.async_get_volume(self._aiohttp_session, zone_loc)
+        return await upnp.async_get_volume(self._aiohttp_session, zone_loc)
 
     def get_position_info(self, zone_room_lst):
         """Get play information from zone."""
@@ -763,7 +763,7 @@ class RaumfeldHost:
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         if zone_udn is not None:
             zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-            response = await aioupnp.async_get_position_info(
+            response = await upnp.async_get_position_info(
                 self._aiohttp_session, zone_loc
             )
         return response
@@ -785,9 +785,7 @@ class RaumfeldHost:
         """Get transport settings from zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        return await aioupnp.async_get_transport_settings(
-            self._aiohttp_session, zone_loc
-        )
+        return await upnp.async_get_transport_settings(self._aiohttp_session, zone_loc)
 
     def set_play_mode(self, zone_room_lst, play_mode):
         """Set play mode of zone."""
@@ -797,7 +795,7 @@ class RaumfeldHost:
         """Set play mode of zone."""
         zone_udn = self.roomlst_to_zoneudn(zone_room_lst)
         zone_loc = self.resolve["udn_to_devloc"][zone_udn]
-        await aioupnp.async_set_play_mode(self._aiohttp_session, zone_loc, play_mode)
+        await upnp.async_set_play_mode(self._aiohttp_session, zone_loc, play_mode)
 
     def room_play_system_sound(self, room, sound=SOUND_SUCCESS):
         """Play system sound on a room."""
@@ -808,7 +806,7 @@ class RaumfeldHost:
         room_udn = self.resolve["room_to_udn"][room]
         rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
         rend_loc = self.resolve["udn_to_devloc"][rend_udn]
-        await aioupnp.async_play_system_sound(self._aiohttp_session, rend_loc, sound)
+        await upnp.async_play_system_sound(self._aiohttp_session, rend_loc, sound)
 
     def save_zone(self, zone_room_lst, repl_snap=False):
         """Create backup of media state for later restore."""
@@ -888,7 +886,7 @@ class RaumfeldHost:
         room_udn = self.resolve["room_to_udn"][room]
         rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
         rend_loc = self.resolve["udn_to_devloc"][rend_udn]
-        await aioupnp.async_play(self._aiohttp_session, rend_loc)
+        await upnp.async_play(self._aiohttp_session, rend_loc)
 
     def room_pause(self, room):
         """Pause media on room."""
@@ -899,7 +897,7 @@ class RaumfeldHost:
         room_udn = self.resolve["room_to_udn"][room]
         rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
         rend_loc = self.resolve["udn_to_devloc"][rend_udn]
-        await aioupnp.async_pause(self._aiohttp_session, rend_loc)
+        await upnp.async_pause(self._aiohttp_session, rend_loc)
 
     def get_room_transport_info(self, room):
         """Get transport information of room."""
@@ -910,7 +908,7 @@ class RaumfeldHost:
         room_udn = self.resolve["room_to_udn"][room]
         rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
         rend_loc = self.resolve["udn_to_devloc"][rend_udn]
-        return await aioupnp.async_get_transport_info(self._aiohttp_session, rend_loc)
+        return await upnp.async_get_transport_info(self._aiohttp_session, rend_loc)
 
     # Speaker methods
     def get_device_renderer(self, udn):
@@ -918,37 +916,35 @@ class RaumfeldHost:
 
     async def async_get_device_renderer(self, udn):
         location = self.device_udn_to_location(udn)
-        return await aioupnp.async_get_device(
-            self._aiohttp_session, location, "renderer"
-        )
+        return await upnp.async_get_device(self._aiohttp_session, location, "renderer")
 
     def get_device_info(self, udn):
         return asyncio.run(self.async_get_device_info(udn))
 
     async def async_get_device_info(self, udn):
         location = self.device_udn_to_location(udn)
-        return await aioupnp.async_get_info(self._aiohttp_session, location)
+        return await upnp.async_get_info(self._aiohttp_session, location)
 
     def get_device_manufacturer(self, udn):
         return asyncio.run(self.async_get_device_manufacturer(udn))
 
     async def async_get_device_manufacturer(self, udn):
         location = self.device_udn_to_location(udn)
-        return await aioupnp.async_get_manufacturer(self._aiohttp_session, location)
+        return await upnp.async_get_manufacturer(self._aiohttp_session, location)
 
     def get_device_model_name(self, udn):
         return asyncio.run(self.async_get_device_model_name(udn))
 
     async def async_get_device_model_name(self, udn):
         location = self.device_udn_to_location(udn)
-        return await aioupnp.async_get_model_name(self._aiohttp_session, location)
+        return await upnp.async_get_model_name(self._aiohttp_session, location)
 
     def get_device_update_info(self, udn):
         return asyncio.run(self.async_get_device_update_info(udn))
 
     async def async_get_device_update_info(self, udn):
         location = self.device_udn_to_location(udn)
-        return await aioupnp.async_get_update_info(self._aiohttp_session, location)
+        return await upnp.async_get_update_info(self._aiohttp_session, location)
 
     def get_device_update_info_version(self, udn):
         return asyncio.run(self.async_get_device_update_info_version(udn))
