@@ -118,38 +118,39 @@ class RaumfeldHost:
 
     async def __async_update(self):
         """Execut all update loops in a group."""
+        aiohttp_session = aiohttp.ClientSession()
         await asyncio.gather(
-            self.async_update_gethostinfo(),
-            self.async_update_getzones(),
-            self.async_update_listdevices(),
-            self.async_update_systemstatechannel(),
+            self.async_update_gethostinfo(aiohttp_session),
+            self.async_update_getzones(aiohttp_session),
+            self.async_update_listdevices(aiohttp_session),
+            self.async_update_systemstatechannel(aiohttp_session),
         )
 
-    async def async_update_gethostinfo(self):
+    async def async_update_gethostinfo(self, session):
         """Update loop for host information."""
         while True:
             url = self.location + "/getHostInfo"
-            await self.__long_polling(url, self.__update_host_info)
+            await self.__long_polling(session, url, self.__update_host_info)
 
-    async def async_update_getzones(self):
+    async def async_update_getzones(self, session):
         """Update loop for zone information."""
         while True:
             url = self.location + "/getZones"
-            await self.__long_polling(url, self.__update_zone_config)
+            await self.__long_polling(session, url, self.__update_zone_config)
 
-    async def async_update_listdevices(self):
+    async def async_update_listdevices(self, session):
         """Update loop for device information."""
         while True:
             url = self.location + "/listDevices"
-            await self.__long_polling(url, self.__update_devices)
+            await self.__long_polling(session, url, self.__update_devices)
 
-    async def async_update_systemstatechannel(self):
+    async def async_update_systemstatechannel(self, session):
         """Update loop for software update information."""
         while True:
             url = self.location + "/SystemStateChannel"
-            await self.__long_polling(url, self.__update_system_state)
+            await self.__long_polling(session, url, self.__update_system_state)
 
-    async def __long_polling(self, url, _callback):
+    async def __long_polling(self, session, url, _callback):
         """Long-polling of web service interface."""
         update_id = None
         timeout = aiohttp.ClientTimeout(total=TIMEOUT_LONG_POLLING)
@@ -159,14 +160,13 @@ class RaumfeldHost:
             if update_id:
                 headers["updateID"] = update_id
             try:
-                async with aiohttp.ClientSession(timeout=timeout) as session:
-                    async with session.get(url, headers=headers) as response:
-                        if response.status == 200:
-                            update_id = response.headers["updateID"]
-                            _callback(await response.read())
-                        elif response.status != 304:
-                            await asyncio.sleep(DELAY_REQUEST_FAILURE_LONG_POLLING)
-                            continue
+                async with session.get(url, headers=headers, timeout=timeout) as response:
+                    if response.status == 200:
+                        update_id = response.headers["updateID"]
+                        _callback(await response.read())
+                    elif response.status != 304:
+                        await asyncio.sleep(DELAY_REQUEST_FAILURE_LONG_POLLING)
+                        continue
             except asyncio.exceptions.TimeoutError:
                 log_info("Long-polling timed out")
             except:
