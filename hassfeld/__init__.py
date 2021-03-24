@@ -12,7 +12,7 @@ import xmltodict
 from . import auxilliary as aux
 from . import upnp
 from . import webservice as ws
-from .common import log_critical, log_info, log_warn, logger
+from .common import log_critical, log_debug, log_info, log_warn, logger
 from .constants import (BROWSE_CHILDREN, CID_SEARCH_ALLTRACKS,
                         DEFAULT_PORT_WEBSERVICE, DELAY_FAST_UPDATE_CHECKS,
                         DELAY_REQUEST_FAILURE_LONG_POLLING, MAX_RETRIES,
