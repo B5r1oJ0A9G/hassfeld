@@ -31,14 +31,20 @@ class RaumfeldHost:
 
     callback = None
 
-    def __init__(self, host, port=DEFAULT_PORT_WEBSERVICE):
+    def __init__(self, host, port=DEFAULT_PORT_WEBSERVICE, session=None):
         """Initialize raumfeld host."""
         self.host = host
         self.port = str(port)
         self.location = "http://" + self.host + ":" + self.port
         self.snap = {}
         self._loop = None
-        self._aiohttp_session = aiohttp.ClientSession()
+
+        if not session:
+            log_debug("Creating session for aiohttp requests.")
+            self._aiohttp_session = aiohttp.ClientSession()
+        else:
+            self._aiohttp_session = session
+            log_debug("Session for aiohttp requests was passed.")
 
         # up-to-date data from Raumfeld web service
         self.wsd = {
