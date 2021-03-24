@@ -916,6 +916,50 @@ class RaumfeldHost:
         rend_loc = self.resolve["udn_to_devloc"][rend_udn]
         return await upnp.async_get_transport_info(self._aiohttp_session, rend_loc)
 
+    def room_next(self, room):
+        """Play next track of room."""
+        return asyncio.run(self.async_room_next(room))
+
+    async def async_room_next(self, room):
+        """Play next track of room."""
+        room_udn = self.resolve["room_to_udn"][room]
+        rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
+        rend_loc = self.resolve["udn_to_devloc"][rend_udn]
+        await upnp.async_next_track(self._aiohttp_session, rend_loc)
+
+    def room_previous(self, room):
+        """Play previous track of room."""
+        return asyncio.run(self.async_room_previous(room))
+
+    async def async_room_previous(self, room):
+        """Play previous track of room."""
+        room_udn = self.resolve["room_to_udn"][room]
+        rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
+        rend_loc = self.resolve["udn_to_devloc"][rend_udn]
+        await upnp.async_previous_track(self._aiohttp_session, rend_loc)
+
+    def get_room_volume(self, room):
+        """Get volume of room."""
+        return asyncio.run(self.async_get_room_volume(room))
+
+    async def async_get_room_volume(self, room):
+        """Get volume of room."""
+        room_udn = self.resolve["room_to_udn"][room]
+        rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
+        rend_loc = self.resolve["udn_to_devloc"][rend_udn]
+        return await upnp.async_get_volume(self._aiohttp_session, rend_loc)
+
+    def set_room_volume(self, room, volume):
+        """Set volume of room."""
+        return asyncio.run(self.async_set_room_volume(room, volume))
+
+    async def async_set_room_volume(self, room, volume):
+        """Set volume of room."""
+        room_udn = self.resolve["room_to_udn"][room]
+        rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
+        rend_loc = self.resolve["udn_to_devloc"][rend_udn]
+        await upnp.async_set_volume(self._aiohttp_session, rend_loc, volume)
+
     # Speaker methods
     def get_device_renderer(self, udn):
         return asyncio.run(self.async_get_device_renderer(udn))
