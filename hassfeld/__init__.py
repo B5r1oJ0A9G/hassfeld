@@ -74,7 +74,7 @@ class RaumfeldHost:
             "zones": [],
         }
 
-        self.init_done = {
+        self._init_done = {
             "devices": False,
             "host_info": False,
             "system_state": False,
@@ -106,6 +106,10 @@ class RaumfeldHost:
         host_info = xmltodict.parse(response_xml)
         return bool("hostName" in host_info["hostInfo"])
 
+    async def async_wait_initial_update(self):
+        while False in self._init_done.values():
+            await asyncio.sleep(DELAY_FAST_UPDATE_CHECKS)
+
     #
     # Functions for backgorund data updates from Raumfeld host.
     #
@@ -119,7 +123,7 @@ class RaumfeldHost:
         asyncio.run_coroutine_threadsafe(self.async_update_all(), self._loop)
 
         # Wait for first data as background updates are asynchronous.
-        while False in self.init_done.values():
+        while False in self._init_done.values():
             sleep(DELAY_FAST_UPDATE_CHECKS)
 
     async def async_update_all(self, session=None):
@@ -196,7 +200,7 @@ class RaumfeldHost:
         gethostinfo = xmltodict.parse(content_xml)
         self.wsd["host_info"] = gethostinfo["hostInfo"]
 
-        self.init_done["host_info"] = True
+        self._init_done["host_info"] = True
 
         if self.callback is not None:
             self.callback(TRIGGER_UPDATE_HOST_INFO)
@@ -264,7 +268,7 @@ class RaumfeldHost:
                     if room["renderer"]["@spotifyConnect"] == SPOTIFY_ACTIVE:
                         self.lists["spotify_renderer"].append(renderer_udn)
 
-        self.init_done["zone_config"] = True
+        self._init_done["zone_config"] = True
 
         if self.callback is not None:
             self.callback(TRIGGER_UPDATE_ZONE_CONFIG)
@@ -297,7 +301,7 @@ class RaumfeldHost:
             if device_type == TYPE_RAUMFELD_DEVICE:
                 self.lists["raumfeld_device_udns"].append(device_udn)
 
-        self.init_done["devices"] = True
+        self._init_done["devices"] = True
 
         if self.callback is not None:
             self.callback(TRIGGER_UPDATE_DEVICES)
@@ -311,7 +315,7 @@ class RaumfeldHost:
 
         self.update_available = aux.str_to_bool(update_available)
 
-        self.init_done["system_state"] = True
+        self._init_done["system_state"] = True
 
         if self.callback is not None:
             self.callback(TRIGGER_UPDATE_SYSTEM_STATE)
