@@ -116,15 +116,20 @@ class RaumfeldHost:
         self._loop = asyncio.new_event_loop()
         threading.Thread(target=self._loop.run_forever, daemon=True).start()
 
-        asyncio.run_coroutine_threadsafe(self.__async_update(), self._loop)
+        asyncio.run_coroutine_threadsafe(self.async_update_all(), self._loop)
 
         # Wait for first data as background updates are asynchronous.
         while False in self.init_done.values():
             sleep(DELAY_FAST_UPDATE_CHECKS)
 
-    async def __async_update(self):
+    async def async_update_all(self, session=None):
         """Execut all update loops in a group."""
-        aiohttp_session = aiohttp.ClientSession()
+        if not session:
+            log_debug("Creating session for webservice requests.")
+            aiohttp_session = aiohttp.ClientSession()
+        else:
+            aiohttp_session = session
+            log_debug("Session for webservice requests was passed.")
         await asyncio.gather(
             self.async_update_gethostinfo(aiohttp_session),
             self.async_update_getzones(aiohttp_session),
@@ -134,27 +139,27 @@ class RaumfeldHost:
 
     async def async_update_gethostinfo(self, session):
         """Update loop for host information."""
-        while True:
-            url = self.location + "/getHostInfo"
-            await self.__long_polling(session, url, self.__update_host_info)
+        url = self.location + "/getHostInfo"
+        await self.__long_polling(session, url, self.__update_host_info)
+        log_critical("Long-polling endless-loop for updating host information exited")
 
     async def async_update_getzones(self, session):
         """Update loop for zone information."""
-        while True:
-            url = self.location + "/getZones"
-            await self.__long_polling(session, url, self.__update_zone_config)
+        url = self.location + "/getZones"
+        await self.__long_polling(session, url, self.__update_zone_config)
+        log_critical("Long-polling endless-loop for updating zone configuration exited")
 
     async def async_update_listdevices(self, session):
         """Update loop for device information."""
-        while True:
-            url = self.location + "/listDevices"
-            await self.__long_polling(session, url, self.__update_devices)
+        url = self.location + "/listDevices"
+        await self.__long_polling(session, url, self.__update_devices)
+        log_critical("Long-polling endless-loop for updating devices exited")
 
     async def async_update_systemstatechannel(self, session):
         """Update loop for software update information."""
-        while True:
-            url = self.location + "/SystemStateChannel"
-            await self.__long_polling(session, url, self.__update_system_state)
+        url = self.location + "/SystemStateChannel"
+        await self.__long_polling(session, url, self.__update_system_state)
+        log_critical("Long-polling endless-loop for updating system state exited")
 
     async def __long_polling(self, session, url, _callback):
         """Long-polling of web service interface."""
