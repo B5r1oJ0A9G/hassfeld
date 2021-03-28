@@ -135,12 +135,15 @@ class RaumfeldHost:
         else:
             aiohttp_session = session
             log_debug("Session for webservice requests was passed.")
-        await asyncio.gather(
-            self.async_update_gethostinfo(aiohttp_session),
-            self.async_update_getzones(aiohttp_session),
-            self.async_update_listdevices(aiohttp_session),
-            self.async_update_systemstatechannel(aiohttp_session),
-        )
+        try:
+            await asyncio.gather(
+                self.async_update_gethostinfo(aiohttp_session),
+                self.async_update_getzones(aiohttp_session),
+                self.async_update_listdevices(aiohttp_session),
+                self.async_update_systemstatechannel(aiohttp_session),
+            )
+        except aiohttp.client_exceptions.ServerDisconnectedError:
+            log_error("Updae loop interrupted because server disconnected")
 
     async def async_update_gethostinfo(self, session):
         """Update loop for host information."""
