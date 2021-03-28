@@ -3,7 +3,7 @@ import inspect
 import logging
 import os
 
-from . import __name__ as MODULE_NAME
+from hassfeld import __name__ as MODULE_NAME
 
 logger = logging.getLogger(MODULE_NAME)
 
