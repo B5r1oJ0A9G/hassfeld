@@ -981,44 +981,56 @@ class RaumfeldHost:
 
     # Speaker methods
     def get_device_renderer(self, udn):
+        """Return renderer UDN of speaker UDN."""
         return asyncio.run(self.async_get_device_renderer(udn))
 
     async def async_get_device_renderer(self, udn):
+        """Return renderer UDN of speaker UDN."""
         location = self.device_udn_to_location(udn)
         return await upnp.async_get_device(self._aiohttp_session, location, "renderer")
 
     def get_device_info(self, udn):
+        """Return software version of device."""
         return asyncio.run(self.async_get_device_info(udn))
 
     async def async_get_device_info(self, udn):
+        """Return software version of device."""
         location = self.device_udn_to_location(udn)
         return await upnp.async_get_info(self._aiohttp_session, location)
 
     def get_device_manufacturer(self, udn):
+        """Return manufacturer of device."""
         return asyncio.run(self.async_get_device_manufacturer(udn))
 
     async def async_get_device_manufacturer(self, udn):
+        """Return manufacturer of device."""
         location = self.device_udn_to_location(udn)
         return await upnp.async_get_manufacturer(self._aiohttp_session, location)
 
     def get_device_model_name(self, udn):
+        """Return model name of device."""
         return asyncio.run(self.async_get_device_model_name(udn))
 
     async def async_get_device_model_name(self, udn):
+        """Return model name of device."""
         location = self.device_udn_to_location(udn)
         return await upnp.async_get_model_name(self._aiohttp_session, location)
 
     def get_device_update_info(self, udn):
+        """Return information of available software update."""
         return asyncio.run(self.async_get_device_update_info(udn))
 
     async def async_get_device_update_info(self, udn):
+        """Return information of available software update."""
         location = self.device_udn_to_location(udn)
         return await upnp.async_get_update_info(self._aiohttp_session, location)
 
     def get_device_update_info_version(self, udn):
+        """Return version of available software update."""
         return asyncio.run(self.async_get_device_update_info_version(udn))
 
     async def async_get_device_update_info_version(self, udn):
+        """Return version of available software update."""
         response = await self.async_get_device_update_info(udn)
 
         if "Version" in response:
