@@ -2,6 +2,7 @@
 import asyncio
 import sys
 
+from aiohttp import client_exceptions
 from async_upnp_client import UpnpFactory
 from async_upnp_client.aiohttp import AiohttpRequester, AiohttpSessionRequester
 
@@ -23,6 +24,8 @@ def exception_handler(function):
             return result
         except asyncio.exceptions.TimeoutError:
             log_info("Function '%s' timed out." % name)
+        except client_exceptions.ClientConnectorError:
+            log_error(sys.exc_info()[1])
         except:
             exc_info = "%s%s" % (sys.exc_info()[0], sys.exc_info()[1])
             log_error("Unexpected error with %s: %s" % (name, exc_info))
