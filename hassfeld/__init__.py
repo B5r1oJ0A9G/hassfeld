@@ -756,7 +756,8 @@ class RaumfeldHost:
     async def async_get_play_mode(self, zone_room_lst):
         """Get play mode of zone."""
         transport_info = await self.async_get_transport_settings(zone_room_lst)
-        return transport_info["PlayMode"]
+        if transport_info:
+            return transport_info["PlayMode"]
 
     def get_transport_info(self, zone_room_lst):
         """Get transport information of zone."""
@@ -1033,8 +1034,6 @@ class RaumfeldHost:
         """Return version of available software update."""
         response = await self.async_get_device_update_info(udn)
 
-        if "Version" in response:
-            version = response["Version"]
-        else:
-            version = None
-        return version
+        if response:
+            if "Version" in response:
+                return response["Version"]

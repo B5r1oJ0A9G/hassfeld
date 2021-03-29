@@ -26,6 +26,7 @@ def exception_handler(function):
             log_info("Function '%s' timed out." % name)
         except client_exceptions.ClientConnectorError:
             log_error(sys.exc_info()[1])
+            return None
         except:
             exc_info = "%s%s" % (sys.exc_info()[0], sys.exc_info()[1])
             log_error("Unexpected error with %s: %s" % (name, exc_info))
