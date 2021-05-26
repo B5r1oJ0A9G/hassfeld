@@ -224,7 +224,7 @@ class RaumfeldHost:
         self.resolve["udn_to_room"] = {}
         self.resolve["zoneudn_to_roomudnlst"] = {}
 
-        getzones = xmltodict.parse(content_xml, force_list=("zone", "room"))
+        getzones = xmltodict.parse(content_xml, force_list=("zone", "room", "renderer"))
         self.wsd["zone_config"] = getzones["zoneConfig"]
 
         if "zones" in self.wsd["zone_config"]:
@@ -236,7 +236,7 @@ class RaumfeldHost:
                 for room_itm in zone_itm["room"]:
                     room_name = room_itm["@name"]
                     room_udn = room_itm["@udn"]
-                    renderer_udn = room_itm["renderer"]["@udn"]
+                    renderer_udn = room_itm["renderer"][0]["@udn"]
                     zone_rooms.append(room_name)
                     self.lists["rooms"].append(room_name)
                     if "@powerState" in room_itm:
@@ -260,7 +260,7 @@ class RaumfeldHost:
             for room in self.wsd["zone_config"]["unassignedRooms"]["room"]:
                 room_name = room["@name"]
                 room_udn = room["@udn"]
-                renderer_udn = room["renderer"]["@udn"]
+                renderer_udn = room["renderer"][0]["@udn"]
                 if "@powerState" in room:
                     self.resolve["roomudn_to_powerstate"][room_udn] = room[
                         "@powerState"
@@ -274,8 +274,8 @@ class RaumfeldHost:
                 self.resolve["udn_to_room"][room_udn] = room_name
                 self.lists["rooms"].append(room_name)
                 self.resolve["roomudn_to_rendudn"][room_udn] = renderer_udn
-                if "@spotifyConnect" in room["renderer"]:
-                    if room["renderer"]["@spotifyConnect"] == SPOTIFY_ACTIVE:
+                if "@spotifyConnect" in room["renderer"][0]:
+                    if room["renderer"][0]["@spotifyConnect"] == SPOTIFY_ACTIVE:
                         self.lists["spotify_renderer"].append(renderer_udn)
 
         self._init_done["zone_config"] = True
