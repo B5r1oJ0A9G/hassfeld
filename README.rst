@@ -2,6 +2,8 @@
 hassfeld
 ========
 
+|Language grade Python|
+
 hassfeld is a module primarily aimed to integrated Teufel Smart Speaker (aka Raumfeld Multiroom) into https://www.home-assistant.io/. However, the design is not tailored to Home Assistant and can be used as a module to any Pyhton program to control the Teufel Smart Speaker. The module also provides corresponding asyncio methods.
 
 Look how it is to use::
@@ -36,3 +38,5 @@ License
 The project is licensed under the GNU General Public License v3 (GPLv3).
 
 
+.. |Language grade Python| image:: https://img.shields.io/lgtm/grade/python/g/B5r1oJ0A9G/hassfeld.svg?logo=lgtm&logoWidth=18
+   :target: https://lgtm.com/projects/g/B5r1oJ0A9G/hassfeld/context:python
