@@ -3,7 +3,7 @@ import asyncio
 import sys
 
 from aiohttp import client_exceptions
-from async_upnp_client import UpnpFactory
+from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.aiohttp import AiohttpRequester, AiohttpSessionRequester
 
 from .common import log_error, log_info
