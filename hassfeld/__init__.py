@@ -12,19 +12,30 @@ import xmltodict
 from . import auxilliary as aux
 from . import upnp
 from . import webservice as ws
-from .common import (log_critical, log_debug, log_error, log_info, log_warn,
-                     logger)
-from .constants import (BROWSE_CHILDREN, CID_SEARCH_ALLTRACKS,
-                        DEFAULT_PORT_WEBSERVICE, DELAY_FAST_UPDATE_CHECKS,
-                        DELAY_REQUEST_FAILURE_LONG_POLLING, MAX_RETRIES,
-                        PREFERRED_TIMEOUT_LONG_POLLING, REQUIRED_METADATA,
-                        SOUND_SUCCESS, SPOTIFY_ACTIVE, TIMEOUT_LONG_POLLING,
-                        TIMEOUT_WEBSERVICE_ACTION,
-                        TRANSPORT_STATE_TRANSITIONING, TRIGGER_UPDATE_DEVICES,
-                        TRIGGER_UPDATE_HOST_INFO, TRIGGER_UPDATE_SYSTEM_STATE,
-                        TRIGGER_UPDATE_ZONE_CONFIG, TYPE_MEDIA_SERVER,
-                        TYPE_RAUMFELD_DEVICE, USER_AGENT_RAUMFELD,
-                        USER_AGENT_RAUMFELD_OIDS)
+from .common import log_critical, log_debug, log_error, log_info, log_warn, logger
+from .constants import (
+    BROWSE_CHILDREN,
+    CID_SEARCH_ALLTRACKS,
+    DEFAULT_PORT_WEBSERVICE,
+    DELAY_FAST_UPDATE_CHECKS,
+    DELAY_REQUEST_FAILURE_LONG_POLLING,
+    MAX_RETRIES,
+    PREFERRED_TIMEOUT_LONG_POLLING,
+    REQUIRED_METADATA,
+    SOUND_SUCCESS,
+    SPOTIFY_ACTIVE,
+    TIMEOUT_LONG_POLLING,
+    TIMEOUT_WEBSERVICE_ACTION,
+    TRANSPORT_STATE_TRANSITIONING,
+    TRIGGER_UPDATE_DEVICES,
+    TRIGGER_UPDATE_HOST_INFO,
+    TRIGGER_UPDATE_SYSTEM_STATE,
+    TRIGGER_UPDATE_ZONE_CONFIG,
+    TYPE_MEDIA_SERVER,
+    TYPE_RAUMFELD_DEVICE,
+    USER_AGENT_RAUMFELD,
+    USER_AGENT_RAUMFELD_OIDS,
+)
 
 
 class RaumfeldHost:
@@ -936,22 +947,22 @@ class RaumfeldHost:
         rend_loc = self.resolve["udn_to_devloc"][rend_udn]
         return await upnp.async_get_transport_info(self._aiohttp_session, rend_loc)
 
-    def room_next(self, room):
+    def room_next_track(self, room):
         """Play next track of room."""
-        return asyncio.run(self.async_room_next(room))
+        return asyncio.run(self.async_room_next_track(room))
 
-    async def async_room_next(self, room):
+    async def async_room_next_track(self, room):
         """Play next track of room."""
         room_udn = self.resolve["room_to_udn"][room]
         rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
         rend_loc = self.resolve["udn_to_devloc"][rend_udn]
         await upnp.async_next_track(self._aiohttp_session, rend_loc)
 
-    def room_previous(self, room):
+    def room_previous_track(self, room):
         """Play previous track of room."""
-        return asyncio.run(self.async_room_previous(room))
+        return asyncio.run(self.async_room_previous_track(room))
 
-    async def async_room_previous(self, room):
+    async def async_room_previous_track(self, room):
         """Play previous track of room."""
         room_udn = self.resolve["room_to_udn"][room]
         rend_udn = self.resolve["roomudn_to_rendudn"][room_udn]
