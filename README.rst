@@ -64,5 +64,5 @@ License
 The project is licensed under the GNU General Public License v3 (GPLv3).
 
 
-.. |Language grade Python| image:: https://img.shields.io/lgtm/grade/python/g/B5r1oJ0A9G/hassfeld.svg?logo=lgtm&logoWidth=18
-   :target: https://lgtm.com/projects/g/B5r1oJ0A9G/hassfeld/context:python
+.. |Language grade Python| image:: https://github.com/B5r1oJ0A9G/hassfeld/actions/workflows/github-code-scanning/codeql/badge.svg?branch=master
+   :target: https://github.com/B5r1oJ0A9G/hassfeld/actions/workflows/github-code-scanning/codeql
