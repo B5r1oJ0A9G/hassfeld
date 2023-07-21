@@ -481,6 +481,35 @@ class RaumfeldHost:
         # Zone creation may take some time before taking effect.
         await self.__async_wait_zone_creation(old_zone_udn, room_lst)
 
+    def add_room_to_zone(self, room, room_lst):
+        """Adds a room to a zone."""
+        return asyncio.run(self.async_add_room_to_zone(room, room_lst))
+
+    async def async_add_room_to_zone(self, room, room_lst):
+        """Adds a room to a zone."""
+        room_udn = self.resolve["room_to_udn"][room]
+        udn_lst = self.roomlst_to_udnlst(room_lst)
+        zone_udn = self.roomudnlst_to_zoneudn(udn_lst)
+        await ws.async_connect_room_to_zone(
+            self._aiohttp_session, self.location, zone_udn, room_udn
+        )
+
+    def drop_room_from_zone(self, room, room_lst):
+        """Removes a room from a zone."""
+        return asyncio.run(self.async_drop_room_from_zone(room, room_lst))
+
+    async def async_drop_room_from_zone(self, room, room_lst=None):
+        """Removes a room from a zone. if room_lst is provided, it must exist in that zone"""
+        room_udn = self.resolve["room_to_udn"][room]
+        if room_lst is None:
+            await ws.async_drop_room_job(self._aiohttp_session, self.location, room_udn)
+        else:
+            for room_name in room_lst:
+                if room_name == room:
+                    await ws.async_drop_room_job(
+                        self._aiohttp_session, self.location, room_udn
+                    )
+
     def set_zone_room_volume(self, zone_room_lst, volume, room_lst=None):
         """Sets volume of rooms in a zone to same level."""
         return asyncio.run(
