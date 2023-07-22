@@ -6,6 +6,7 @@ import threading
 from time import sleep
 
 import aiohttp
+import re
 import requests
 import xmltodict
 
@@ -885,13 +886,17 @@ class RaumfeldHost:
         volume = await self.async_get_zone_volume(zone_room_lst)
         mute = await self.async_get_zone_mute(zone_room_lst)
         key = repr(zone_room_lst)
+        track = position_info["Track"]
+        fii_par = "fii=" + str(track - 1)
         if key not in self.snap or repl_snap:
             self.snap[key] = {}
             self.snap[key]["uri"] = media_info["CurrentURI"]
             self.snap[key]["metadata"] = media_info["CurrentURIMetaData"]
             self.snap[key]["abs_time"] = position_info["AbsTime"]
+            self.snap[key]["fii_par"] = fii_par
             self.snap[key]["volume"] = volume
             self.snap[key]["mute"] = mute
+            log_debug("Creating snapshot: 'snap[%s]' = '%s'" % (key, self.snap[key]))
 
     def restore_zone(self, zone_room_lst, del_snap=True):
         """restore media state from previous snapshot."""
@@ -902,7 +907,9 @@ class RaumfeldHost:
         key = repr(zone_room_lst)
         retries = 0
         if key in self.snap:
-            uri = self.snap[key]["uri"]
+            orig_uri = self.snap[key]["uri"]
+            fii_par = self.snap[key]["fii_par"]
+            uri = re.sub('fii=[0-9]+', fii_par, orig_uri)
             metadata = self.snap[key]["metadata"]
             abs_time = self.snap[key]["abs_time"]
             volume = self.snap[key]["volume"]
