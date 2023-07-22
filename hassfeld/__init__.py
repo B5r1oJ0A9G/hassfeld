@@ -1,12 +1,12 @@
 """Module to interface with Raumfeld smart speakers."""
 import asyncio
 import json
+import re
 import sys
 import threading
 from time import sleep
 
 import aiohttp
-import re
 import requests
 import xmltodict
 
@@ -909,7 +909,7 @@ class RaumfeldHost:
         if key in self.snap:
             orig_uri = self.snap[key]["uri"]
             fii_par = self.snap[key]["fii_par"]
-            uri = re.sub('fii=[0-9]+', fii_par, orig_uri)
+            uri = re.sub("fii=[0-9]+", fii_par, orig_uri)
             metadata = self.snap[key]["metadata"]
             abs_time = self.snap[key]["abs_time"]
             volume = self.snap[key]["volume"]
