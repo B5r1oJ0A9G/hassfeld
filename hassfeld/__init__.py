@@ -20,6 +20,7 @@ from .constants import (
     DEFAULT_PORT_WEBSERVICE,
     DELAY_FAST_UPDATE_CHECKS,
     DELAY_REQUEST_FAILURE_LONG_POLLING,
+    FII_PAR_STR,
     MAX_RETRIES,
     PREFERRED_TIMEOUT_LONG_POLLING,
     REQUIRED_METADATA,
@@ -887,7 +888,7 @@ class RaumfeldHost:
         mute = await self.async_get_zone_mute(zone_room_lst)
         key = repr(zone_room_lst)
         track = position_info["Track"]
-        fii_par = "fii=" + str(track - 1)
+        fii_par = FII_PAR_STR + str(track - 1)
         if key not in self.snap or repl_snap:
             self.snap[key] = {}
             self.snap[key]["uri"] = media_info["CurrentURI"]
@@ -909,7 +910,10 @@ class RaumfeldHost:
         if key in self.snap:
             orig_uri = self.snap[key]["uri"]
             fii_par = self.snap[key]["fii_par"]
-            uri = re.sub("fii=[0-9]+", fii_par, orig_uri)
+            uri = re.sub(FII_PAR_STR + "[0-9]+", fii_par, orig_uri)
+            if fii_par not in uri:
+                uri = orig_uri + fii_par
+            log_debug("URI is: 'uri' = '%s'" % uri)
             metadata = self.snap[key]["metadata"]
             abs_time = self.snap[key]["abs_time"]
             volume = self.snap[key]["volume"]
