@@ -918,6 +918,8 @@ class RaumfeldHost:
             abs_time = self.snap[key]["abs_time"]
             volume = self.snap[key]["volume"]
             mute = self.snap[key]["mute"]
+            if del_snap:
+                self.snap.pop(key, None)
             await self.async_set_zone_volume(zone_room_lst, 0)
             await self.async_set_zone_mute(zone_room_lst, mute)
             await self.async_set_av_transport_uri(zone_room_lst, uri, metadata)
@@ -930,8 +932,6 @@ class RaumfeldHost:
                 retries += 1
             await self.async_zone_seek(zone_room_lst, abs_time)
             await self.async_set_zone_volume(zone_room_lst, volume)
-            if del_snap:
-                self.snap.pop(key, None)
 
     async def async_enter_automatic_standby(self, room):
         """Put room speakers into automatic stand-by."""
