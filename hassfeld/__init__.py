@@ -882,14 +882,14 @@ class RaumfeldHost:
 
     async def async_save_zone(self, zone_room_lst, repl_snap=False):
         """Create backup of media state for later restore."""
-        media_info = await self.async_get_media_info(zone_room_lst)
-        position_info = await self.async_get_position_info(zone_room_lst)
-        volume = await self.async_get_zone_volume(zone_room_lst)
-        mute = await self.async_get_zone_mute(zone_room_lst)
         key = repr(zone_room_lst)
-        track = position_info["Track"]
-        fii_par = FII_PAR_STR + str(track - 1)
         if key not in self.snap or repl_snap:
+            media_info = await self.async_get_media_info(zone_room_lst)
+            position_info = await self.async_get_position_info(zone_room_lst)
+            volume = await self.async_get_zone_volume(zone_room_lst)
+            mute = await self.async_get_zone_mute(zone_room_lst)
+            track = position_info["Track"]
+            fii_par = FII_PAR_STR + str(track - 1)
             self.snap[key] = {}
             self.snap[key]["uri"] = media_info["CurrentURI"]
             self.snap[key]["metadata"] = media_info["CurrentURIMetaData"]
@@ -898,6 +898,8 @@ class RaumfeldHost:
             self.snap[key]["volume"] = volume
             self.snap[key]["mute"] = mute
             log_debug("Creating snapshot: 'snap[%s]' = '%s'" % (key, self.snap[key]))
+        else:
+          log_warn("Read-only snapshot data available for key: '%s'" % (key))
 
     def restore_zone(self, zone_room_lst, del_snap=True):
         """restore media state from previous snapshot."""
@@ -932,6 +934,9 @@ class RaumfeldHost:
                 retries += 1
             await self.async_zone_seek(zone_room_lst, abs_time)
             await self.async_set_zone_volume(zone_room_lst, volume)
+        else:
+            log_warn("No snapshot data available for key: '%s'" % (key))
+
 
     async def async_enter_automatic_standby(self, room):
         """Put room speakers into automatic stand-by."""
