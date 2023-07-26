@@ -496,6 +496,19 @@ class RaumfeldHost:
             self._aiohttp_session, self.location, zone_udn, room_udn
         )
 
+    def add_rooms_to_zone(self, room_lst, zone_room_lst):
+        """Adds a rooms to a zone."""
+        return asyncio.run(self.async_add_rooms_to_zone(room_lst, zone_room_lst))
+
+    async def async_add_rooms_to_zone(self, room_lst, zone_room_lst):
+        """Adds a rooms to a zone."""
+        room_udn_lst = self.roomlst_to_udnlst(room_lst)
+        zone_udn_lst = self.roomlst_to_udnlst(zone_room_lst)
+        zone_udn = self.roomudnlst_to_zoneudn(zone_udn_lst)
+        await ws.async_connect_rooms_to_zone(
+            self._aiohttp_session, self.location, zone_udn, room_udn_lst
+        )
+
     def drop_room_from_zone(self, room, room_lst):
         """Removes a room from a zone."""
         return asyncio.run(self.async_drop_room_from_zone(room, room_lst))
@@ -899,7 +912,7 @@ class RaumfeldHost:
             self.snap[key]["mute"] = mute
             log_debug("Creating snapshot: 'snap[%s]' = '%s'" % (key, self.snap[key]))
         else:
-          log_warn("Read-only snapshot data available for key: '%s'" % (key))
+            log_warn("Read-only snapshot data available for key: '%s'" % (key))
 
     def restore_zone(self, zone_room_lst, del_snap=True):
         """restore media state from previous snapshot."""
@@ -936,7 +949,6 @@ class RaumfeldHost:
             await self.async_set_zone_volume(zone_room_lst, volume)
         else:
             log_warn("No snapshot data available for key: '%s'" % (key))
-
 
     async def async_enter_automatic_standby(self, room):
         """Put room speakers into automatic stand-by."""
