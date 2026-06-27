@@ -17,10 +17,4 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.5',
-    install_requires=[
-        "aiohttp",
-        "async_upnp_client>=0.27",
-        "requests",
-        "xmltodict",
-    ]
 )
