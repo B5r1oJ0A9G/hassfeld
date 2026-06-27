@@ -29,6 +29,8 @@ jobs:
   publish-testpypi:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     if: |
       github.event_name == 'release'
       || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'testpypi')
@@ -40,10 +42,14 @@ jobs:
           path: dist/
       - uses: astral-sh/setup-uv@v5
       - run: uv publish --publish-url https://test.pypi.org/legacy/
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.UV_PUBLISH_TOKEN }}
 
   publish-pypi:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     if: |
       github.event_name == 'release'
       && !contains(github.event.release.tag_name, 'a')
@@ -57,3 +63,5 @@ jobs:
           path: dist/
       - uses: astral-sh/setup-uv@v5
       - run: uv publish
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.UV_PUBLISH_TOKEN }}
