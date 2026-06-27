@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hassfeld"
-version = "0.3.13-alpha2"
+version = "0.3.14-alpha0"
 description = "Integration of Raumfeld into Home Assistant"
 requires-python = ">=3.9"
 dependencies = [
