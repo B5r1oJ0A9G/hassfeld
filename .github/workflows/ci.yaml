@@ -47,3 +47,27 @@ jobs:
         with:
           name: dist
           path: dist/
+
+  downstream-test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: actions/checkout@v4
+        with:
+          repository: B5r1oJ0A9G/teufel_raumfeld
+          path: teufel_raumfeld
+      - uses: astral-sh/setup-uv@v5
+      - name: Install teufel_raumfeld with local hassfeld
+        run: |
+          cd teufel_raumfeld
+          uv sync --extra ha
+          uv pip install ../dist/hassfeld-*.whl
+          uv pip install -e .
+      - name: Run teufel_raumfeld tests
+        run: |
+          cd teufel_raumfeld
+          uv run pytest tests/ -v
