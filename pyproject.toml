@@ -13,7 +13,7 @@ dependencies = [
     "requests",
     "xmltodict",
 ]
-readme = "README.rst"
+readme = "README.md"
 license = "GPL-3.0"
 classifiers = [
     "Programming Language :: Python :: 3",
